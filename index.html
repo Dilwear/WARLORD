@@ -274,9 +274,29 @@
             gap: 10px;
         }
         
+        /* Splash Screen */
+        .splash-screen {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            width: 100vw;
+            background: #000;
+            opacity: 1;
+            transition: opacity 1s ease-out;
+            z-index: 200;
+            position: fixed;
+            top: 0;
+            left: 0;
+        }
+        .splash-video {
+            max-width: 80%;
+            max-height: 80vh;
+        }
+
         /* Main Menu */
         .menu-screen {
-            display: flex;
+            display: none;
             flex-direction: column;
             justify-content: center;
             align-items: center;
@@ -400,22 +420,21 @@
         #map-container {
             width: 100%;
             height: 100%;
-            overflow: hidden; /* Это свойство обязательно! */
+            overflow: hidden;
             position: relative;
-            cursor: grab; /* Курсор для перемещения */
+            cursor: grab;
         }
         
         #map-container:active {
-            cursor: grabbing; /* Курсор во время перемещения */
+            cursor: grabbing;
         }
 
         #map-image {
             position: absolute;
-            /* Плавный переход для всех трансформаций */
             transition: transform 0.2s cubic-bezier(0.25, 0.46, 0.45, 0.94);
-            transform-origin: 0 0; /* Точка отсчета для масштабирования */
-            user-select: none; /* Запрет выделения изображения */
-            pointer-events: none; /* Запрет событий мыши для самого изображения */
+            transform-origin: 0 0;
+            user-select: none;
+            pointer-events: none;
         }
 
         .map-close-btn {
@@ -463,7 +482,7 @@
             .stat {
                 align-items: center;
                 text-align: center;
-                flex: 1 1 30%; /* Позволяет трем элементам быть в одном ряду */
+                flex: 1 1 30%;
                 min-width: 80px;
             }
             .info-group {
@@ -490,7 +509,7 @@
             .btn {
                 padding: 10px;
                 font-size: 0.9rem;
-                min-height: 44px; /* Рекомендованный размер для тача */
+                min-height: 44px;
             }
             .action-buttons {
                 flex-wrap: wrap;
@@ -536,6 +555,13 @@
     </style>
 </head>
 <body>
+
+    <div id="splash-screen" class="splash-screen">
+        <video id="splash-video" class="splash-video" autoplay muted playsinline>
+            <source src="studio.mp4" type="video/mp4">
+            Ваш браузер не поддерживает видео.
+        </video>
+    </div>
 
     <div id="game-container" class="game-container">
         
@@ -1213,6 +1239,8 @@
     let currentSoundEffect;
 
     const gameElements = {
+        splashScreen: document.getElementById('splash-screen'),
+        splashVideo: document.getElementById('splash-video'),
         gameContainer: document.getElementById('game-container'),
         menuScreen: document.getElementById('menu-screen'),
         introVideoScreen: document.getElementById('intro-video-screen'),
@@ -1435,7 +1463,7 @@
             playMusic('war');
             showEvent(event);
         } else {
-            const eventKey = Object.keys(events)[Math.floor(Math.random() * Object.keys(events).length)];
+            const eventKey = Object.keys(events).filter(key => !Object.keys(special_events).includes(key))[Math.floor(Math.random() * Object.keys(events).length)];
             showEvent(events[eventKey]);
         }
     }
@@ -1481,9 +1509,16 @@
     }
 
     function updateFactionsDisplay() {
-        gameElements.factionBelogoriev.innerText = `${game.factions["Белогорьев"].toFixed(1)}%`;
-        gameElements.factionZull.innerText = `${game.factions["Данил Зуллов"].toFixed(1)}%`;
-        gameElements.factionGoshanchik.innerText = `${game.factions["Григорий Печорин"].toFixed(1)}%`;
+        game.factions["Белогорьев"] = Math.max(0, Math.min(100, game.factions["Белогорьев"]));
+        game.factions["Данил Зуллов"] = Math.max(0, Math.min(100, game.factions["Данил Зуллов"]));
+        game.factions["Григорий Печорин"] = Math.max(0, Math.min(100, game.factions["Григорий Печорин"]));
+
+        const total = game.factions["Белогорьев"] + game.factions["Данил Зуллов"] + game.factions["Григорий Печорин"];
+        const factor = 100 / total;
+
+        gameElements.factionBelogoriev.innerText = `${(game.factions["Белогорьев"] * factor).toFixed(1)}%`;
+        gameElements.factionZull.innerText = `${(game.factions["Данил Зуллов"] * factor).toFixed(1)}%`;
+        gameElements.factionGoshanchik.innerText = `${(game.factions["Григорий Печорин"] * factor).toFixed(1)}%`;
     }
     
     function updateFlag() {
@@ -1500,30 +1535,30 @@
         if (!game.is_coup_happened) {
             if (game.factions["Данил Зуллов"] >= 70) {
                 game.regime = "Военная хунта";
-                game.ruling_party = "Орден Данила Зуллов";
+                game.ruling_party = "Орден Данила Зуллова";
                 game.is_coup_happened = true;
                 game.factions = {"Белогорьев": 0, "Данил Зуллов": 100, "Григорий Печорин": 0};
                 showPopup("Государственный переворот!", "Военный переворот! Данил Зуллов захватил власть. Теперь вы - лидер военной хунты под его контролем.");
-                // Removed clearInterval
+                clearInterval(turnInterval);
             } else if (game.factions["Григорий Печорин"] >= 70) {
                 game.regime = "Демократическое государство";
                 game.ruling_party = "Фракция Григория Печорина";
                 game.is_coup_happened = true;
                 game.factions = {"Белогорьев": 0, "Григорий Печорин": 100, "Данил Зуллов": 0};
                 showPopup("Революция!", "Демократическая революция! Григорий Печорин захватил власть. Вы стали лидером марионеточного демократического правительства.");
-                // Removed clearInterval
+                clearInterval(turnInterval);
             }
         }
         if (game.elite_loyalty < 20 && game.tension > 60) {
             showPopup("Государственный переворот!", "Элиты больше не доверяют вам. Произошёл переворот, и вы были свергнуты.");
-            // Removed clearInterval
+            clearInterval(turnInterval);
         }
     }
     
     function checkGameOver() {
         if (game.population <= 100000 && game.current_date.getFullYear() > 2030) {
             showPopup("Поражение", "Население резко сократилось. Кардаев больше не может существовать.");
-            // Removed clearInterval
+            clearInterval(turnInterval);
         }
     }
     
@@ -2230,7 +2265,24 @@
             currentSoundEffect.pause();
         }
     }
-
+    
+    function showSplashScreen() {
+        gameElements.splashScreen.style.display = 'flex';
+        gameElements.splashVideo.onended = () => {
+            gameElements.splashScreen.style.opacity = '0';
+            setTimeout(() => {
+                gameElements.splashScreen.style.display = 'none';
+                showMenuScreen();
+            }, 1000);
+        };
+        gameElements.splashVideo.play().catch(e => {
+            // Если автовоспроизведение не сработало, показываем главное меню сразу
+            console.error("Автовоспроизведение заблокировано, показываем главное меню.");
+            gameElements.splashScreen.style.display = 'none';
+            showMenuScreen();
+        });
+    }
+    
     function showMenuScreen() {
         gameElements.introVideo.pause();
         gameElements.introVideo.currentTime = 0;
@@ -2313,7 +2365,7 @@
         }
     };
     
-    // --- УЛУЧШЕННАЯ СИСТЕМА КАРТЫ ---
+    // --- УЛУЧШЕННАЯ СИСТЕМА КАРТЫ С УПРАВЛЕНИЕМ КАСАНИЯМИ ---
 
     // Состояние карты
     const mapState = {
@@ -2324,7 +2376,11 @@
         panY: 0,
         isDragging: false,
         lastMouseX: 0,
-        lastMouseY: 0
+        lastMouseY: 0,
+        initialDistance: null, // Для pinch-to-zoom
+        initialZoom: null,
+        initialPanX: 0,
+        initialPanY: 0
     };
 
     function showMap() {
@@ -2341,7 +2397,12 @@
         mapContainer.addEventListener('mousemove', drag);
         mapContainer.addEventListener('mouseup', endDrag);
         mapContainer.addEventListener('mouseleave', endDrag);
-        mapContainer.addEventListener('wheel', zoom, { passive: false });
+        mapContainer.addEventListener('wheel', zoom);
+
+        // Обработчики касаний
+        mapContainer.addEventListener('touchstart', touchStart);
+        mapContainer.addEventListener('touchmove', touchMove);
+        mapContainer.addEventListener('touchend', touchEnd);
     }
     
     function hideMap() {
@@ -2354,8 +2415,13 @@
         mapContainer.removeEventListener('mouseup', endDrag);
         mapContainer.removeEventListener('mouseleave', endDrag);
         mapContainer.removeEventListener('wheel', zoom);
+        
+        mapContainer.removeEventListener('touchstart', touchStart);
+        mapContainer.removeEventListener('touchmove', touchMove);
+        mapContainer.removeEventListener('touchend', touchEnd);
     }
 
+    // Обработчики для мыши
     function startDrag(event) {
         event.preventDefault();
         mapState.isDragging = true;
@@ -2410,6 +2476,75 @@
         updateMapTransform();
     }
 
+    // Обработчики для касаний
+    function touchStart(event) {
+        if (event.touches.length === 1) {
+            mapState.isDragging = true;
+            mapState.lastMouseX = event.touches[0].clientX;
+            mapState.lastMouseY = event.touches[0].clientY;
+            mapState.initialDistance = null;
+        } else if (event.touches.length === 2) {
+            mapState.isDragging = false;
+            mapState.initialDistance = getDistance(event.touches[0], event.touches[1]);
+            mapState.initialZoom = mapState.zoom;
+            mapState.initialPanX = mapState.panX;
+            mapState.initialPanY = mapState.panY;
+        }
+    }
+
+    function touchMove(event) {
+        event.preventDefault();
+
+        if (event.touches.length === 1 && mapState.isDragging) {
+            const dx = event.touches[0].clientX - mapState.lastMouseX;
+            const dy = event.touches[0].clientY - mapState.lastMouseY;
+
+            mapState.panX += dx;
+            mapState.panY += dy;
+
+            mapState.lastMouseX = event.touches[0].clientX;
+            mapState.lastMouseY = event.touches[0].clientY;
+
+            clampPan();
+            updateMapTransform();
+        } else if (event.touches.length === 2 && mapState.initialDistance !== null) {
+            const currentDistance = getDistance(event.touches[0], event.touches[1]);
+            const zoomFactor = currentDistance / mapState.initialDistance;
+            
+            let newZoom = mapState.initialZoom * zoomFactor;
+            newZoom = Math.max(mapState.minZoom, Math.min(mapState.maxZoom, newZoom));
+            
+            // Определяем центр касаний для более точного зума
+            const centerClientX = (event.touches[0].clientX + event.touches[1].clientX) / 2;
+            const centerClientY = (event.touches[0].clientY + event.touches[1].clientY) / 2;
+
+            const rect = gameElements.mapContainer.getBoundingClientRect();
+            const centerX = centerClientX - rect.left;
+            const centerY = centerClientY - rect.top;
+
+            const pointX = (centerX - mapState.initialPanX) / mapState.initialZoom;
+            const pointY = (centerY - mapState.initialPanY) / mapState.initialZoom;
+            
+            mapState.zoom = newZoom;
+            mapState.panX = centerX - pointX * mapState.zoom;
+            mapState.panY = centerY - pointY * mapState.zoom;
+            
+            clampPan();
+            updateMapTransform();
+        }
+    }
+
+    function touchEnd() {
+        mapState.isDragging = false;
+        mapState.initialDistance = null;
+    }
+
+    function getDistance(touch1, touch2) {
+        const dx = touch1.clientX - touch2.clientX;
+        const dy = touch1.clientY - touch2.clientY;
+        return Math.sqrt(dx * dx + dy * dy);
+    }
+
     function clampPan() {
         const mapImage = gameElements.mapImage;
         const container = gameElements.mapContainer;
@@ -2439,7 +2574,6 @@
         }
     }
 
-
     function updateMapTransform() {
         if (gameElements.mapImage) {
             gameElements.mapImage.style.transform = `translate(${mapState.panX}px, ${mapState.panY}px) scale(${mapState.zoom})`;
@@ -2447,7 +2581,7 @@
     }
     
     document.addEventListener('DOMContentLoaded', () => {
-        showMenuScreen();
+        showSplashScreen();
     });
 
 </script>
