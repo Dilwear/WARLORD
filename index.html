@@ -1,0 +1,2449 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Политический симулятор</title>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-color: #1a1a1a;
+            --main-text-color: #e0e0e0;
+            --secondary-text-color: #a0a0a0;
+            --btn-bg-color: #3b3b3b;
+            --btn-hover-color: #4f4f4f;
+            --popup-bg-color: #2a2a2a;
+            --popup-border-color: #555;
+            --accent-color: #007bff;
+            --accent-success: #28a745;
+            --accent-warning: #ffc107;
+            --accent-danger: #dc3545;
+            --border-radius: 8px;
+            --shadow: 0 4px 15px rgba(0, 0, 0, 0.5);
+        }
+
+        body {
+            font-family: 'Roboto', sans-serif;
+            background-color: var(--bg-color);
+            color: var(--main-text-color);
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        /* Main Container */
+        .game-container {
+            display: none;
+            flex-direction: column;
+            height: 100vh;
+            width: 100vw;
+        }
+
+        /* Top Bar */
+        .top-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 20px;
+            background: linear-gradient(180deg, #2b2b2b, #1e1e1e);
+            border-bottom: 2px solid #333;
+            box-shadow: var(--shadow);
+            z-index: 10;
+        }
+
+        .stats-group {
+            display: flex;
+            flex-grow: 1;
+            justify-content: flex-start;
+            gap: 20px;
+        }
+
+        .stat {
+            display: flex;
+            flex-direction: column;
+            text-align: left;
+        }
+
+        .stat-label {
+            font-size: 0.8rem;
+            color: var(--secondary-text-color);
+        }
+
+        .stat-value {
+            font-size: 1.2rem;
+            font-weight: bold;
+        }
+
+        .info-group {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-end;
+            text-align: right;
+            gap: 5px;
+        }
+
+        .info-label {
+            font-size: 0.8rem;
+            color: var(--secondary-text-color);
+        }
+
+        .info-value {
+            font-size: 0.9rem;
+            font-weight: bold;
+        }
+
+        .flag {
+            width: 70px;
+            height: 40px;
+            border-radius: var(--border-radius);
+            margin-left: 20px;
+            box-shadow: var(--shadow);
+        }
+
+        /* Main Game Area */
+        .game-area {
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            padding: 20px;
+            background: radial-gradient(circle, #222, #111);
+            position: relative;
+        }
+
+        .event-image {
+            max-width: 80%;
+            max-height: 40vh;
+            border-radius: var(--border-radius);
+            box-shadow: var(--shadow);
+            margin-bottom: 20px;
+        }
+        
+        .event-video {
+            width: 80%;
+            max-height: 60vh;
+            border-radius: var(--border-radius);
+            box-shadow: var(--shadow);
+            margin-bottom: 20px;
+        }
+
+        .event-title {
+            font-size: 2rem;
+            font-weight: bold;
+            color: var(--main-text-color);
+        }
+
+        .event-description {
+            font-size: 1rem;
+            color: var(--secondary-text-color);
+            margin-top: 10px;
+            max-width: 800px;
+        }
+
+        .event-options {
+            margin-top: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            width: 100%;
+            max-width: 600px;
+        }
+
+        /* Bottom Bar */
+        .bottom-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 20px;
+            background: linear-gradient(180deg, #1e1e1e, #2b2b2b);
+            border-top: 2px solid #333;
+            box-shadow: var(--shadow);
+            z-index: 10;
+        }
+
+        .factions-group {
+            display: flex;
+            flex-grow: 1;
+            justify-content: flex-start;
+            gap: 15px;
+        }
+
+        .faction {
+            font-size: 0.9rem;
+            font-weight: bold;
+        }
+
+        .faction-label {
+            color: var(--secondary-text-color);
+        }
+        
+        .faction-value {
+            color: var(--main-text-color);
+        }
+        
+        .action-buttons {
+            display: flex;
+            gap: 10px;
+        }
+        
+        /* Buttons */
+        .btn {
+            background-color: var(--btn-bg-color);
+            color: var(--main-text-color);
+            border: none;
+            padding: 12px 20px;
+            border-radius: var(--border-radius);
+            cursor: pointer;
+            transition: background-color 0.2s, transform 0.2s;
+            font-size: 1rem;
+            font-weight: bold;
+            box-shadow: var(--shadow);
+        }
+        
+        .btn:hover:not(:disabled) {
+            background-color: var(--btn-hover-color);
+            transform: translateY(-2px);
+        }
+        
+        .btn:disabled {
+            background-color: #555;
+            color: #aaa;
+            cursor: not-allowed;
+            box-shadow: none;
+        }
+
+        .btn-green {
+            background-color: var(--accent-success);
+        }
+        
+        .btn-red {
+            background-color: var(--accent-danger);
+        }
+        
+        /* Popups */
+        .popup-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            backdrop-filter: blur(5px);
+            justify-content: center;
+            align-items: center;
+            z-index: 100;
+        }
+        
+        .popup-content {
+            background-color: var(--popup-bg-color);
+            padding: 25px;
+            border-radius: var(--border-radius);
+            box-shadow: var(--shadow);
+            border: 2px solid var(--popup-border-color);
+            max-width: 600px;
+            width: 90%;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+        
+        .popup-title {
+            font-size: 1.5rem;
+            font-weight: bold;
+            text-align: center;
+        }
+        
+        .popup-body {
+            font-size: 1rem;
+            line-height: 1.5;
+            color: var(--secondary-text-color);
+        }
+        
+        .popup-footer {
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+        }
+        
+        /* Main Menu */
+        .menu-screen {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            width: 100vw;
+            background: radial-gradient(circle, #222, #111);
+        }
+
+        .menu-logo {
+            width: 300px;
+            margin-bottom: 50px;
+        }
+        
+        .menu-buttons {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            width: 300px;
+        }
+
+        .menu-screen .btn {
+            width: 100%;
+            height: 60px;
+            font-size: 1.2rem;
+        }
+        
+        /* Video Screen */
+        .intro-video-screen {
+            display: none;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            width: 100vw;
+            background: #000;
+            color: white;
+            padding: 20px;
+        }
+
+        .video-container {
+            width: 80%;
+            position: relative;
+        }
+
+        .video-player {
+            width: 100%;
+            height: auto;
+        }
+
+        .video-text {
+            position: absolute;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            text-align: center;
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: white;
+            background: rgba(0, 0, 0, 0.5);
+            padding: 10px 20px;
+            border-radius: var(--border-radius);
+            max-width: 80%;
+            opacity: 0;
+            transition: opacity 1s ease-in-out;
+        }
+
+        .video-skip {
+            position: absolute;
+            bottom: 20px;
+            right: 20px;
+            background-color: rgba(0, 0, 0, 0.5);
+            color: white;
+            border: 2px solid white;
+            padding: 10px 20px;
+            border-radius: var(--border-radius);
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+        
+        .video-skip:hover {
+            background-color: rgba(0, 0, 0, 0.8);
+        }
+
+        /* Progress Bar */
+        .progress-bar-container {
+            width: 100%;
+            background-color: #555;
+            border-radius: var(--border-radius);
+            overflow: hidden;
+            margin-top: 10px;
+        }
+        
+        .progress-bar {
+            height: 20px;
+            background-color: var(--accent-success);
+            text-align: center;
+            line-height: 20px;
+            color: white;
+            font-weight: bold;
+            transition: width 0.5s;
+        }
+        
+        .progress-label {
+            text-align: center;
+            margin-bottom: 5px;
+            font-size: 0.9rem;
+        }
+
+        /* --- СТИЛИ ДЛЯ ИСПРАВЛЕННОЙ КАРТЫ --- */
+        .map-screen {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: #111;
+            z-index: 150;
+        }
+
+        #map-container {
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            position: relative;
+            cursor: grab;
+        }
+        
+        #map-container:active {
+            cursor: grabbing;
+        }
+
+        #map-container svg {
+            position: absolute;
+            transform-origin: 0 0;
+            user-select: none;
+            /* Важно: регионы внутри SVG должны быть кликабельны */
+            transition: transform 0.1s linear; /* Плавность для панорамирования */
+        }
+
+        #map-container svg path,
+        #map-container svg polygon {
+             pointer-events: all !important;
+             transition: fill 0.3s ease, transform 0.2s;
+             stroke: #000; /* Добавляем обводку для лучшей читаемости */
+             stroke-width: 2px;
+        }
+        
+        #map-container svg path:hover,
+        #map-container svg polygon:hover {
+            filter: brightness(1.2); /* Немного подсвечиваем регион при наведении */
+        }
+
+        .map-close-btn {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            z-index: 200;
+        }
+        /* --- КОНЕЦ СТИЛЕЙ ДЛЯ КАРТЫ --- */
+
+        .lore-text {
+            text-align: center;
+            font-size: 1.1em;
+            max-width: 800px;
+            margin: 0 auto;
+            line-height: 1.6;
+        }
+        .lore-heading {
+            font-size: 1.8em;
+            font-weight: bold;
+            margin-bottom: 20px;
+        }
+        .lore-section {
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+
+    <div id="game-container" class="game-container">
+        
+        <div class="top-bar">
+            <div class="stats-group">
+                <div class="stat">
+                    <span class="stat-label">Население</span>
+                    <span class="stat-value" id="population-stat">0</span>
+                </div>
+                <div class="stat">
+                    <span class="stat-label">Производство</span>
+                    <span class="stat-value" id="production-stat">0</span>
+                </div>
+                <div class="stat">
+                    <span class="stat-label">Войска</span>
+                    <span class="stat-value" id="military-stat">0</span>
+                </div>
+                <div class="stat">
+                    <span class="stat-label">Напряжённость</span>
+                    <span class="stat-value" id="tension-stat">0%</span>
+                </div>
+                <div class="stat">
+                    <span class="stat-label">Мораль</span>
+                    <span class="stat-value" id="morale-stat">0%</span>
+                </div>
+                <div class="stat">
+                    <span class="stat-label">Лояльность элит</span>
+                    <span class="stat-value" id="elite-stat">0%</span>
+                </div>
+            </div>
+            <div class="info-group">
+                <div class="info-label" id="date-info">Дата: 1 Января 2025</div>
+                <div class="info-label" id="regime-info">Режим: Народная Республика</div>
+                <div class="info-label" id="ideology-info">Идеология: Центризм</div>
+                <div class="info-label" id="corruption-info">Коррупция: 30%</div>
+                <div class="info-label" id="research-info">Исследования: Нет</div>
+            </div>
+            <img src="zs.png" alt="Flag" class="flag" id="flag-image">
+        </div>
+
+        <div class="game-area">
+            <img id="event-image" class="event-image" style="display: none;">
+            <h2 id="event-title" class="event-title"></h2>
+            <p id="event-description" class="event-description"></p>
+            <div id="event-options" class="event-options"></div>
+        </div>
+
+        <div class="bottom-bar">
+            <div class="factions-group">
+                <span class="faction-label">Фракции:</span>
+                <span class="faction" id="faction-belogoriev"><span class="faction-label">Белогорьев:</span> <span class="faction-value">50%</span></span>
+                <span class="faction" id="faction-zull"><span class="faction-label">Данил Зуллов:</span> <span class="faction-value">25%</span></span>
+                <span class="faction" id="faction-goshanchik"><span class="faction-label">Григорий Печорин:</span> <span class="faction-value">25%</span></span>
+            </div>
+            <div class="action-buttons">
+                <button class="btn" onclick="showActions('decisions')">Политика</button>
+                <button class="btn" onclick="showActions('focuses')">Фокусы</button>
+                <button class="btn" onclick="showResearchPopup()">Исследования</button>
+                <button class="btn" onclick="showActions('spies')">Шпионаж</button>
+                <button class="btn" onclick="showLorePopup()">ЛоР</button>
+                <button class="btn" onclick="showHistoryPopup()">История</button>
+                <button class="btn" onclick="showDiplomacyPopup()">Дипломатия</button>
+                <button class="btn" onclick="showAchievementsPopup()">Достижения</button>
+                <button class="btn" onclick="showMap()">Карта</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="menu-screen" class="menu-screen">
+        <img src="logo.png" alt="Game Logo" class="menu-logo">
+        <div class="menu-buttons">
+            <button class="btn" onclick="showIntroVideo()">Начать игру</button>
+            <button class="btn" onclick="showSettingsScreen()">Настройки</button>
+            <button class="btn" onclick="window.close()">Выход</button>
+        </div>
+    </div>
+    
+    <div id="intro-video-screen" class="intro-video-screen">
+        <div class="video-container">
+            <video id="intro-video" class="video-player">
+                <source src="intro.mp4" type="video/mp4">
+                Ваш браузер не поддерживает HTML5 видео.
+            </video>
+            <div id="video-text" class="video-text"></div>
+            <button class="video-skip" onclick="endVideo()">Дальше</button>
+        </div>
+    </div>
+    
+    <div id="settings-screen" class="menu-screen" style="display:none;">
+        <h2 style="font-size:2rem;">Настройки</h2>
+        <div class="menu-buttons" style="align-items:flex-start;">
+            <div style="display:flex; flex-direction:column; width:100%; gap:10px;">
+                <label for="music-volume" style="font-size:1.2rem;">Громкость музыки:</label>
+                <input type="range" id="music-volume" min="0" max="100" value="50" style="width:100%;">
+            </div>
+            <div style="display:flex; flex-direction:column; width:100%; gap:10px;">
+                <label style="font-size:1.2rem;">Полноэкранный режим:</label>
+                <button id="fullscreen-toggle" class="btn">Включить</button>
+            </div>
+            <div style="display:flex; flex-direction:column; width:100%; gap:10px;">
+                <label style="font-size:1.2rem;">Разрешение:</label>
+                <div style="display:flex; gap:10px;">
+                    <button class="btn" onclick="setResolution(1920, 1080)">1920x1080</button>
+                    <button class="btn" onclick="setResolution(1280, 720)">1280x720</button>
+                    <button class="btn" onclick="setResolution(800, 600)">800x600</button>
+                </div>
+            </div>
+            <button class="btn" style="margin-top:20px;" onclick="showMenuScreen()">Назад</button>
+        </div>
+    </div>
+
+    <div id="popup-overlay" class="popup-overlay">
+        <div id="popup-content" class="popup-content">
+            <h3 id="popup-title" class="popup-title"></h3>
+            <div id="popup-body" class="popup-body"></div>
+            <div id="popup-footer" class="popup-footer">
+                <button class="btn" onclick="closePopup()">OK</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="map-screen" class="map-screen">
+        <div id="map-container">
+            </div>
+        <button class="btn map-close-btn" onclick="hideMap()">Закрыть</button>
+    </div>
+
+    <div id="map-tooltip" style="position: fixed; display: none; background: #2a2a2a; color: #e0e0e0; border: 1px solid #555; padding: 10px; border-radius: 5px; pointer-events: none; z-index: 9999;"></div>
+
+    <audio id="music-audio" loop></audio>
+    <audio id="war-audio" loop></audio>
+    <audio id="sfx-audio"></audio>
+
+<script>
+    const RUSSIAN_MONTHS = [
+        "Января", "Февраля", "Марта", "Апреля", "Мая", "Июня",
+        "Июля", "Августа", "Сентября", "Октября", "Ноября", "Декабря"
+    ];
+
+    const war_actions = {
+        "shelling": {
+            "title": "Обстрел (штурм артиллерией/миномётами)",
+            "cost": 10000,
+            "cooldown": 3,
+            "success_mod": 5,
+            "progress_mod_success": 5,
+            "progress_mod_fail": -3,
+            "effects_success": {"military_power": -1000, "production": -8000, "morale": 5, "tension": -5},
+            "effects_fail": {"military_power": -3000, "production": -5000, "morale": -5, "tension": 10}
+        },
+        "river_crossing": {
+            "title": "Переправа через реку (рискованная операция)",
+            "cost": 20000,
+            "cooldown": 6,
+            "success_mod": -10,
+            "progress_mod_success": 15,
+            "progress_mod_fail": -15,
+            "effects_success": {"military_power": 8000, "production": -15000, "morale": 10, "tension": 5},
+            "effects_fail": {"military_power": -8000, "production": -10000, "morale": -15, "tension": 20}
+        },
+        "artillery_barrage": {
+            "title": "Артиллерийская подготовка",
+            "cost": 15000,
+            "cooldown": 4,
+            "success_mod": 10,
+            "progress_mod_success": 10,
+            "progress_mod_fail": -5,
+            "effects_success": {"military_power": 2000, "production": -12000, "morale": 5, "tension": -2},
+            "effects_fail": {"military_power": -2000, "production": -8000, "morale": -5, "tension": 8}
+        },
+        "infantry_assault": {
+            "title": "Пехотная атака",
+            "cost": 8000,
+            "cooldown": 2,
+            "success_mod": 0,
+            "progress_mod_success": 8,
+            "progress_mod_fail": -8,
+            "effects_success": {"military_power": 3000, "production": -7000, "morale": 8, "tension": 2},
+            "effects_fail": {"military_power": -4000, "production": -4000, "morale": -8, "tension": 12}
+        },
+        "special_forces": {
+            "title": "Рейд спецназа",
+            "cost": 25000,
+            "cooldown": 8,
+            "success_mod": -5,
+            "progress_mod_success": 20,
+            "progress_mod_fail": -10,
+            "effects_success": {"military_power": 12000, "production": -20000, "morale": 15, "tension": -10},
+            "effects_fail": {"military_power": -5000, "production": -15000, "morale": -20, "tension": 25}
+        },
+        "siege_warfare": {
+            "title": "Осада города",
+            "cost": 35000,
+            "cooldown": 10,
+            "success_mod": 15,
+            "progress_mod_success": 30,
+            "progress_mod_fail": -20,
+            "effects_success": {"military_power": 15000, "production": -30000, "morale": 20, "tension": -15},
+            "effects_fail": {"military_power": -10000, "production": -25000, "morale": -25, "tension": 30}
+        }
+    };
+
+    const war_defensive_actions = {
+        "fortify_position": {
+            "title": "Укрепить позиции",
+            "cost": 5000,
+            "cooldown": 2,
+            "effects_success": {"military_power": 1500, "production": -5000, "morale": 5, "tension": -5},
+            "effects_fail": {"military_power": -1000, "production": -2000, "morale": -5, "tension": 5}
+        },
+        "counter_recon": {
+            "title": "Контрразведка",
+            "cost": 3000,
+            "cooldown": 3,
+            "effects_success": {"military_power": 500, "production": -3000, "tension": -10, "elite_loyalty": 5},
+            "effects_fail": {"tension": 5, "elite_loyalty": -5}
+        }
+    };
+    
+    const national_focuses = {
+        "economic_boom": {
+            "title": "Экономический бум",
+            "description": "Инвестиции в производство и сельское хозяйство для мощного экономического роста.",
+            "duration": 5,
+            "cooldown": 5,
+            "consequences": {"production": 100000, "tension": -10, "faction_goshanchik": 15, "faction_belogoriev": 5, "morale": 10}
+        },
+        "fortify_borders": {
+            "title": "Укрепление границ",
+            "description": "Масштабное строительство оборонительных сооружений и подготовка армии.",
+            "duration": 4,
+            "cooldown": 4,
+            "consequences": {"military_power": 15000, "production": -50000, "tension": 15, "faction_zull": 15, "faction_belogoriev": 5, "elite_loyalty": 10}
+        },
+        "social_reforms": {
+            "title": "Социальные реформы",
+            "description": "Введение социальных гарантий, улучшение здравоохранения и образования для снижения напряжённости.",
+            "duration": 6,
+            "cooldown": 6,
+            "consequences": {"population": 50000, "production": -30000, "tension": -20, "faction_goshanchik": 15, "faction_belogoriev": 5, "morale": 20}
+        },
+        "create_intelligence": {
+            "title": "Создание Внешней Разведки",
+            "description": "Формирование разведывательного управления для проведения секретных операций.",
+            "duration": 3,
+            "cooldown": 10,
+            "consequences": {"production": -20000, "tension": 5, "elite_loyalty": 10, "message": "Внешняя разведка создана. Теперь вы можете проводить шпионские миссии."}
+        },
+        "trade_agreement": {
+            "title": "Заключение торгового союза",
+            "description": "Поиск партнёров для экономического сотрудничества, что приведёт к росту торговли.",
+            "duration": 4,
+            "cooldown": 5,
+            "consequences": {"production": 50000, "tension": -10, "faction_goshanchik": 10, "elite_loyalty": 5}
+        },
+        "cultural_revolution": {
+            "title": "Культурная революция",
+            "description": "Продвижение национальной культуры и искусства для поднятия духа нации.",
+            "duration": 5,
+            "cooldown": 6,
+            "consequences": {"morale": 25, "production": -10000, "tension": -15, "faction_goshanchik": 15}
+        },
+        "state_ideology": {
+            "title": "Укрепление государственной идеологии",
+            "description": "Внедрение единой государственной доктрины во все сферы жизни.",
+            "duration": 7,
+            "cooldown": 8,
+            "consequences": {"morale": 10, "tension": -20, "production": -5000, "faction_zull": 10, "elite_loyalty": 15}
+        }
+    };
+    
+    const decisions = {
+        "propaganda_belogoriev": {
+            "title": "Пропаганда Белогорьева",
+            "cost": 5000,
+            "cooldown": 3,
+            "consequences": {"production": -5000, "tension": -10, "faction_belogoriev": 15, "faction_goshanchik": -5, "faction_zull": -5, "morale": 5},
+            "message": "Вы запустили мощную пропагандистскую кампанию, укрепив свою власть."
+        },
+        "propaganda_zull": {
+            "title": "Пропаганда Данила Зуллова",
+            "cost": 3000,
+            "cooldown": 3,
+            "consequences": {"production": -3000, "tension": 5, "military_power": 1000, "faction_zull": 15, "faction_goshanchik": -10, "morale": -5},
+            "message": "Вы усилили милитаристские настроения в обществе."
+        },
+        "propaganda_goshanchik": {
+            "title": "Пропаганда Григория Печорина",
+            "cost": 7000,
+            "cooldown": 3,
+            "consequences": {"production": -7000, "tension": -15, "population": 10000, "faction_goshanchik": 15, "faction_zull": -5, "morale": 10},
+            "message": "Вы продвигаете демократические ценности, завоевывая сердца граждан."
+        },
+        "strengthen_militia": {
+            "title": "Усилить Народную Милицию",
+            "cost": 15000,
+            "cooldown": 3,
+            "consequences": {"production": -15000, "military_power": 5000, "tension": 5, "faction_zull": 10, "morale": 5},
+            "message": "Вы направили ресурсы на обучение и вооружение Народной Милиции. Ваша армия стала сильнее."
+        },
+        "humanitarian_leaflets": {
+            "title": "Раздать гуманитарные листовки",
+            "cost": 2000,
+            "cooldown": 3,
+            "consequences": {"production": -2000, "tension": -10, "faction_goshanchik": 5, "morale": 5},
+            "message": "Гуманитарные листовки снизили уровень напряжённости в городе."
+        },
+        "open_casino": {
+            "title": "Открыть казино",
+            "cost": 5000,
+            "cooldown": 3,
+            "consequences": {"production": 15000, "tension": -5, "faction_goshanchik": 5, "faction_belogoriev": 5, "morale": 5},
+            "message": "Вы получили прибыль, но недовольны моралисты."
+        },
+        "finance_intelligence": {
+            "title": "Финансировать разведку",
+            "cost": 10000,
+            "cooldown": 3,
+            "consequences": {"production": -10000, "elite_loyalty": 5, "tension": -5, "message": "Выделив средства на разведку, вы увеличили её эффективность."}
+        },
+        "build_hospital": {
+            "title": "Построить госпиталь",
+            "cost": 25000,
+            "cooldown": 3,
+            "consequences": {"production": -25000, "population": 10000, "morale": 10, "tension": -5, "faction_goshanchik": 10},
+            "message": "Строительство нового госпиталя значительно улучшило качество жизни."
+        },
+        "military_parade": {
+            "title": "Провести военный парад",
+            "cost": 8000,
+            "cooldown": 3,
+            "event_key": "parade_event"
+        },
+        "fight_corruption": {
+            "title": "Антикоррупционная кампания",
+            "cost": 15000,
+            "cooldown": 5,
+            "consequences": {"corruption": -15, "tension": -5, "morale": 5, "production": -15000, "message": "Вы объявили войну коррупции, что повысило доверие."}
+        }
+    };
+
+    const spy_missions = {
+        "sabotage": {
+            "title": "Саботаж производства у врага",
+            "cost": 15000,
+            "cooldown": 5,
+            "consequences_success": {"production": -5000, "tension": 10, "morale": 5},
+            "message_success": "Ваши агенты успешно саботировали вражеские фабрики. Производство врага упало.",
+            "consequences_fail": {"tension": 15, "morale": -5},
+            "message_fail": "Миссия провалилась. Враг насторожился."
+        },
+        "reconnaissance": {
+            "title": "Сбор разведданных",
+            "cost": 5000,
+            "cooldown": 5,
+            "consequences_success": {"tension": -10, "morale": 5, "elite_loyalty": 5},
+            "message_success": "Агенты получили важную информацию о враге, что снизило вашу напряжённость.",
+            "consequences_fail": {"tension": 5, "morale": -5},
+            "message_fail": "Миссия провалена, агенты ничего не добыли."
+        },
+        "assassinate_leader": {
+            "title": "Убийство лидера врага",
+            "cost": 30000,
+            "cooldown": 5,
+            "consequences_success": {},
+            "message_success": "",
+            "consequences_fail": {"tension": 20, "military_power": -1000},
+            "message_fail": ""
+        }
+    };
+
+    const war_events = {
+        "war_start": {
+            "title": "Начало войны",
+            "description": "Донская Казачья Республика объявила вам войну. Ваша армия готова к бою. Что будем делать?",
+            "options": [
+                {
+                    "text": "Ответить агрессией",
+                    "consequences": {"military_power": 5000, "tension": 10, "production": -10000, "message": "Вы дали отпор врагу. Война началась."}
+                },
+                {
+                    "text": "Провести оборонительные действия",
+                    "consequences": {"military_power": 2000, "tension": 5, "production": -5000, "message": "Вы перешли в глухую оборону. Война началась."}
+                }
+            ]
+        },
+        "war_lose": {
+            "title": "Поражение в войне",
+            "description": "Ваши войска потерпели поражение. Донская Казачья Республика захватила Кардаев. Вы были свергнуты, и ваша жизнь висит на волоске. Что вы делаете?",
+            "options": [
+                {
+                    "text": "Бежать",
+                    "consequences": {"production": 0, "population": 0, "military_power": 0, "morale": 0, "tension": 100, "message": "Вы бежали из Кардаева. Ваша судьба неизвестна."}
+                }
+            ]
+        },
+        "war_win": {
+            "title": "Победа в войне",
+            "description": "Ваши войска разгромили Донскую Казачью Республику! Вы стали героем. Что будем делать с завоёванными территориями?",
+            "options": [
+                {
+                    "text": "Аннексировать",
+                    "consequences": {"population": 15000, "production": 20000, "military_power": 5000, "tension": 0, "morale": 10, "message": "Вы аннексировали территории, что дало вам новые ресурсы и население."}
+                },
+                {
+                    "text": "Создать марионеточное государство",
+                    "consequences": {"population": 5000, "production": 5000, "military_power": 2000, "tension": -10, "morale": 5, "message": "Вы создали марионеточное государство, что дало вам контроль над территорией и лояльность."}
+                }
+            ]
+        },
+        "war_event1": {
+            "title": "Враг пошёл в наступление",
+            "description": "Враг прорвал линию фронта. Что будем делать?",
+            "options": [
+                {
+                    "text": "Отправить подкрепления",
+                    "consequences": {"military_power": -5000, "production": -10000, "morale": -5, "tension": 10, "message": "Вы отправили подкрепления, но это было дорого."}
+                },
+                {
+                    "text": "Призвать добровольцев",
+                    "consequences": {"military_power": 1000, "morale": 5, "tension": 5, "message": "Вы призвали добровольцев. Ваша армия пополнилась новыми солдатами."}
+                }
+            ]
+        },
+        "war_event2": {
+            "title": "Успешная контратака",
+            "description": "Ваши войска успешно контратаковали врага и отбросили его назад. Враг отступает.",
+            "options": [
+                {
+                    "text": "Развить успех",
+                    "consequences": {"military_power": 5000, "production": -5000, "morale": 10, "tension": -5, "message": "Вы развили успех, но это было дорого."}
+                },
+                {
+                    "text": "Закрепиться на достигнутых позициях",
+                    "consequences": {"military_power": 1000, "morale": 5, "tension": -5, "message": "Вы закрепились на достигнутых позициях."}
+                }
+            ]
+        },
+        "negotiate_peace": {
+            "title": "Предложение о мире",
+            "description": "Противник предлагает обсудить условия мира. Что будем делать?",
+            "options": [
+                {
+                    "text": "Принять мир на своих условиях",
+                    "consequences": {"military_power": 5000, "production": 10000, "morale": 10, "tension": -20, "message": "Вы заключили выгодный для себя мир."}
+                },
+                {
+                    "text": "Отказаться и продолжать войну",
+                    "consequences": {"military_power": -2000, "morale": -5, "tension": 10, "message": "Вы отказались от мира, война продолжается."}
+                }
+            ]
+        }
+    };
+    
+    const events = {
+        "event1": {
+            "title": "Угроза бунта",
+            "description": "Напряжение в городе растёт. Григорий Печорин предлагает провести открытое собрание с народом, а Данил Зуллов - ввести комендантский час и усилить патрули.",
+            "options": [
+                {
+                    "text": "Путь Григория Печорина: Провести собрание",
+                    "consequences": {"tension": -15, "population": 5000, "production": -10000, "faction_belogoriev": 5, "faction_goshanchik": 10, "faction_zull": -10, "morale": 10, "message": "Народ успокоился, но экономика немного пострадала."}
+                },
+                {
+                    "text": "Путь Данила Зуллова: Ввести комендантский час",
+                    "consequences": {"tension": 10, "military_power": 1500, "production": 5000, "faction_belogoriev": 5, "faction_goshanchik": -10, "faction_zull": 10, "morale": -10, "message": "Порядок восстановлен силой, но народ недоволен."}
+                },
+                {
+                    "text": "Путь Белогорьева: Предложить амнистию",
+                    "consequences": {"tension": -5, "production": -2000, "faction_belogoriev": 10, "faction_goshanchik": 5, "faction_zull": -5, "morale": 5, "elite_loyalty": 5, "message": "Вы укрепили свой авторитет, показав милосердие."}
+                }
+            ]
+        },
+        "event2": {
+            "title": "Экономический кризис",
+            "description": "Производство падает, фабрики простаивают. Григорий Печорин предлагает внедрить свободный рынок, Данил Зуллов - национализировать все предприятия.",
+            "options": [
+                {
+                    "text": "Путь Григория Печорина: Внедрить свободный рынок",
+                    "consequences": {"tension": -10, "production": 50000, "faction_belogoriev": 5, "faction_goshanchik": 15, "faction_zull": -10, "morale": 5, "elite_loyalty": -5, "message": "Рынок ожил, но вы потеряли часть контроля."}
+                },
+                {
+                    "text": "Путь Данила Зуллова: Национализировать все предприятия",
+                    "consequences": {"tension": 20, "production": 75000, "faction_belogoriev": 5, "faction_goshanchik": -10, "faction_zull": 15, "morale": -10, "elite_loyalty": 10, "message": "Производство в ваших руках, но народ возмущён."}
+                },
+                {
+                    "text": "Путь Белогорьева: Стимулировать ключевые отрасли",
+                    "consequences": {"tension": 0, "production": 30000, "faction_belogoriev": 10, "faction_goshanchik": -5, "faction_zull": -5, "morale": 0, "elite_loyalty": 5, "message": "Вы выбрали срединный путь, стабилизировав экономику."}
+                }
+            ]
+        },
+        "event3": {
+            "title": "Увеличение рождаемости",
+            "description": "Население стареет, рождаемость падает. Григорий Печорин предлагает социальные программы, а Данил Зуллов - обязательную рождаемость.",
+            "options": [
+                {
+                    "text": "Путь Григория Печорина: Социальные программы",
+                    "consequences": {"tension": -5, "population": 25000, "production": -10000, "faction_belogoriev": 0, "faction_goshanchik": 10, "faction_zull": -10, "morale": 10, "message": "Социальные программы дали результат, но были дорогими."}
+                },
+                {
+                    "text": "Путь Данила Зуллова: Обязательная рождаемость",
+                    "consequences": {"tension": 25, "population": 50000, "military_power": 1000, "faction_belogoriev": 0, "faction_goshanchik": 10, "faction_zull": 10, "morale": -15, "message": "Жёсткие меры принесли результат, но возмутили население."}
+                },
+            ]
+        },
+        "event4": {
+            "title": "Иностранная угроза",
+            "description": "Соседние фракции начинают стягивать войска к границам Кардаева. Что будем делать?",
+            "options": [
+                {
+                    "text": "Путь Григория Печорина: Предложить дипломатические переговоры",
+                    "consequences": {"tension": -5, "production": -20000, "faction_goshanchik": 10, "faction_zull": -10, "morale": 5, "message": "Угроза отступила ценой уступок, но город ослаб."}
+                },
+                {
+                    "text": "Путь Данила Зуллова: Начать военную мобилизацию",
+                    "consequences": {"tension": 20, "military_power": 10000, "production": -50000, "faction_goshanchik": -10, "faction_zull": 10, "morale": -10, "message": "Кардаев готов к войне, но это вызвало недовольство и ударило по экономике."}
+                },
+                {
+                    "text": "Путь Белогорьева: Превентивный удар",
+                    "consequences": {"tension": 30, "military_power": 15000, "production": 10000, "faction_zull": 15, "faction_goshanchik": -15, "morale": -10, "elite_loyalty": 15, "message": "Вы уничтожили врага, но теперь все смотрят на вас с опасением. Вы стали настоящей военной державой."}
+                }
+            ]
+        },
+        "event5": {
+            "title": "Успех в сельском хозяйстве",
+            "description": "Благоприятные погодные условия и новые технологии привели к рекордному урожаю.",
+            "options": [
+                {
+                    "text": "Отлично!",
+                    "consequences": {"production": 10000, "population": 5000, "morale": 5, "tension": -5, "message": "Ваши усилия в сельском хозяйстве принесли плоды. Народ сыт и счастлив."}
+                }
+            ]
+        },
+        "event6": {
+            "title": "Пропаганда инофракции",
+            "description": "Соседняя страна запустила мощную пропагандистскую кампанию, направленную против вас. Это вызвало недовольство среди населения.",
+            "options": [
+                {
+                    "text": "Игнорировать",
+                    "consequences": {"morale": -10, "tension": 10, "message": "Вы игнорировали пропаганду, но она всё равно повлияла на народ."}
+                },
+                {
+                    "text": "Запустить контрпропаганду",
+                    "consequences": {"production": -5000, "morale": 5, "tension": -5, "message": "Вы запустили контрпропаганду, но это стоило вам ресурсов."}
+                }
+            ]
+        }
+    };
+    
+    const special_events = {
+        "parade_event": {
+            "title": "Великий военный парад в Кардаеве!",
+            "description": "В честь Дня Победы в Кардаеве прошел грандиозный военный парад. Тысячи горожан вышли на улицы, чтобы поприветствовать марширующих солдат, боевую технику и флаги своей Народной Республики. Ваш народ гордится вами и вашей армией.",
+            "image_path": "parad.png",
+            "sound_key": "parad",
+            "options": [
+                {
+                    "text": "Я горжусь своим народом!",
+                    "consequences": {"military_power": 1000, "morale": 15, "tension": 5, "faction_zull": 5, "message": "Масштабный парад поднял дух армии и народа."}
+                }
+            ]
+        },
+        "rne_rally": {
+            "title": "Радикализация",
+            "description": "В Кардаеве начали организовываться радикальные митинги организации 'Русское Национальное Единство'. Их цель — поднять народ на бунт и отстранить вас от власти.",
+            "image_path": "rne.png",
+            "sound_key": "rne",
+            "options": [
+                {
+                    "text": "Подавить силой",
+                    "consequences": {
+                        "military_power": 5000, "production": -10000, "tension": 20, "morale": -15, "faction_zull": 10, "faction_belogoriev": -5, 
+                        "message": "Вы подавили митинги силой. Это вызвало ещё большее недовольство, но показало вашу решимость.",
+                        "sound_key": "sila"
+                    }
+                },
+                {
+                    "text": "Пойти на переговоры",
+                    "consequences": {
+                        "production": -5000, "tension": -10, "morale": -5, "elite_loyalty": 5, "faction_goshanchik": 10,
+                        "message": "Вы решили договориться с митингующими. Это ослабило напряжённость, но некоторые считают это проявлением слабости.",
+                        "sound_key": "peregovori"
+                    }
+                }
+            ]
+        },
+        "goshanchik_rebellion": {
+            "title": "Народное восстание",
+            "description": "В городе начались массовые протесты сторонников Григория Печорина. Народ требует демократических реформ и свободных выборов. Что будете делать?",
+            "image_path": "duh.png",
+            "sound_key": "duh",
+            "options": [
+                {
+                    "text": "Подавить силой",
+                    "consequences": {
+                        "military_power": 2000, "production": -5000, "tension": 15, "morale": -10, "faction_zull": 10, "faction_goshanchik": -15, 
+                        "message": "Вы подавили восстание, но это нанесло удар по вашей репутации.",
+                        "sound_key": "sila" 
+                    }
+                },
+                {
+                    "text": "Объявить о грядущих реформах",
+                    "consequences": {
+                        "production": -10000, "tension": -15, "morale": 10, "elite_loyalty": -5, "faction_goshanchik": 15, 
+                        "message": "Вы пошли на уступки, и народ временно успокоился, но элиты недовольны.",
+                        "sound_key": "peregovori"
+                    }
+                }
+            ]
+        },
+        "zull_triumph": {
+            "title": "Триумф Данила Зуллова",
+            "description": "Данил Зуллов, воодушевленный своим растущим влиянием, организовал военный марш в вашу честь, укрепив вашу власть и показал силу.",
+            "options": [{"text": "Принять его триумф", "consequences": {"morale": 10, "military_power": 5000, "elite_loyalty": 10, "tension": -5, "message": "Триумф Данила Зуллова повысил ваш авторитет."}}]
+        },
+        "goshanchik_peace": {
+            "title": "Призыв к миру",
+            "description": "Григорий Печорин выступил с призывом к мирному урегулированию всех конфликтов, чем завоевал поддержку народа.",
+            "options": [{"text": "Поддержать его призыв", "consequences": {"morale": 10, "tension": -10, "faction_goshanchik": 10, "message": "Поддержка мирного призыва повысила популярность."}}]
+        }
+    };
+    
+    const random_events = {
+        "random1": { "title": "Разгром контрабандистов", "description": "Силы безопасности разгромили крупную сеть контрабандистов. Это привело к росту доходов и лояльности элит.", "consequences": {"production": 15000, "tension": -5, "elite_loyalty": 10}},
+        "random2": { "title": "Крупный пожар", "description": "На окраине города произошёл крупный пожар. Были разрушены жилые дома и склады с продукцией.", "consequences": {"production": -20000, "population": -5000, "morale": -10, "tension": 5}},
+        "random3": { "title": "Рост цен на продовольствие", "description": "Цены на продовольствие резко выросли, вызвав недовольство среди населения.", "consequences": {"morale": -15, "tension": 10}},
+        "random4": { "title": "Дипломатический скандал", "description": "Случайный инцидент на границе привёл к дипломатическому скандалу с соседним государством.", "consequences": {"tension": 10, "elite_loyalty": -5, "morale": -5}},
+        "random5": { "title": "Открытие новых месторождений", "description": "Были обнаружены новые месторождения полезных ископаемых, что сулит экономический рост.", "consequences": {"production": 50000, "morale": 5, "elite_loyalty": 5}},
+        "random6": { "title": "Торговый договор", "description": "Иностранная фирма подписала с вами крупный торговый контракт.", "consequences": {"production": 20000, "tension": -5, "faction_goshanchik": 5, "morale": 5}},
+        "random7": { "title": "Катастрофа", "description": "В результате стихийного бедствия пострадал один из регион. Это вызвало разрушения и потери.", "consequences": {"production": -15000, "population": -5000, "tension": 10, "faction_belogoriev": -5, "morale": -15}},
+        "random8": { "title": "Успешное подавление контрабанды", "description": "Ваши спецслужбы провели успешную операцию по пресечению контрабанды оружия.", "consequences": {"production": 5000, "military_power": 500, "tension": -5, "faction_zull": 5, "morale": 5}},
+        "random9": { "title": "Героический поступок", "description": "Один из ваших генералов совершил героический поступок, который поднял боевой дух армии.", "consequences": {"morale": 15, "military_power": 1000, "faction_zull": 5}},
+        "random10": { "title": "Внутренняя интрига", "description": "Внутренняя разведка раскрыла заговор против вас со стороны элиты.", "consequences": {"elite_loyalty": -10, "tension": 10}}
+    };
+
+    const technologies = {
+        "advanced_logistics": {"title": "Передовая логистика", "cost": 100, "researched": false, "in_progress": false, "turns_left": 0},
+        "military_industrial_complex": {"title": "ВПК", "cost": 150, "researched": false, "in_progress": false, "turns_left": 0},
+        "modern_farming": {"title": "Современное земледелие", "cost": 120, "researched": false, "in_progress": false, "turns_left": 0}
+    };
+    
+    const achievements = {
+        "first_victory": {"title": "Первая победа", "achieved": false, "description": "Вы выиграли свою первую войну."},
+        "economic_miracle": {"title": "Экономическое чудо", "achieved": false, "description": "Достигните 1 млн. производства."},
+        "loyal_elite": {"title": "Преданная элита", "achieved": false, "description": "Достигните 100% лояльности элит."}
+    };
+
+    const LORE_TEXT = `
+        <div class="lore-text">
+            <h2 class="lore-heading">Лор и персонажи мира</h2>
+            
+            <div class="lore-section">
+                <h3>Город-государство Кардаев</h3>
+                <p>Действие игры начинается в 2025 году, когда некогда единая и великая Россия оказалась расколота кровопролитной гражданской войной. На руинах прежнего государства возникают и борются за влияние десятки новых фракций и республик. Город Кардаев, расположенный на юго-западе, становится последним оплотом для вашей фракции.</p>
+            </div>
+
+            <div class="lore-section">
+                <h3>Главный герой: Дмитрий Белогорьев</h3>
+                <p>Вы — Дмитрий Белогорьев, лидер фракции «Зов Справедливости». Вы возглавляли оборону в Белгородской и Харьковской областях, но в итоге были вынуждены отступить в Ростовскую область и укрепиться в городе Кардаев. Теперь ваша судьба и судьба города зависят от каждого принятого вами решения. Ваша цель — сохранить власть и привести Кардаев к процветанию или, напротив, превратить его в несокрушимую военную крепость.</p>
+            </div>
+
+            <div class="lore-section">
+                <h3>Ваши советники и фракции</h3>
+                <p>В вашем правительстве есть три ключевые фракции, каждая из которых предлагает свой путь развития:</p>
+                <p><strong>Фракция «Зов Справедливости» (Белогорьев):</strong> Это ваша фракция. Она стремится найти золотую середину, поддерживая стабильность и благополучие народа, избегая крайностей и конфликтов.</p>
+                <p><strong>Фракция «Орден Данила Зуллова» (Милитаристы):</strong> Возглавляет её харизматичный, но безжалостный военачальник Данил Зуллов. Он считает, что единственное спасение для Кардаева — это полная милитаризация и жёсткий контроль над всеми сферами жизни. Его сторонники видят силу и порядок как главные ценности.</p>
+                <p><strong>Фракция «Григория Печорина» (Демократы):</strong> Эту фракцию ведёт за собой одарённый оратор и общественный деятель Григорий Печорин. Он убеждён, что только свобода, социальные реформы и демократия могут привести к истинному процветанию и миру.</p>
+            </div>
+        </div>
+    `;
+    
+    // --- Game State ---
+    let game = {};
+    let turnInterval;
+    let currentMusic;
+    let currentSoundEffect;
+
+    const gameElements = {
+        gameContainer: document.getElementById('game-container'),
+        menuScreen: document.getElementById('menu-screen'),
+        introVideoScreen: document.getElementById('intro-video-screen'),
+        settingsScreen: document.getElementById('settings-screen'),
+        mapScreen: document.getElementById('map-screen'),
+        // mapImage больше не нужен, т.к. SVG вставляется динамически
+        mapContainer: document.getElementById('map-container'),
+        
+        populationStat: document.getElementById('population-stat'),
+        productionStat: document.getElementById('production-stat'),
+        militaryStat: document.getElementById('military-stat'),
+        tensionStat: document.getElementById('tension-stat'),
+        moraleStat: document.getElementById('morale-stat'),
+        eliteStat: document.getElementById('elite-stat'),
+        
+        dateInfo: document.getElementById('date-info'),
+        regimeInfo: document.getElementById('regime-info'),
+        ideologyInfo: document.getElementById('ideology-info'),
+        corruptionInfo: document.getElementById('corruption-info'),
+        researchInfo: document.getElementById('research-info'),
+        flagImage: document.getElementById('flag-image'),
+
+        factionBelogoriev: document.getElementById('faction-belogoriev').querySelector('.faction-value'),
+        factionZull: document.getElementById('faction-zull').querySelector('.faction-value'),
+        factionGoshanchik: document.getElementById('faction-goshanchik').querySelector('.faction-value'),
+
+        eventTitle: document.getElementById('event-title'),
+        eventDescription: document.getElementById('event-description'),
+        eventOptions: document.getElementById('event-options'),
+        eventImage: document.getElementById('event-image'),
+
+        popupOverlay: document.getElementById('popup-overlay'),
+        popupTitle: document.getElementById('popup-title'),
+        popupBody: document.getElementById('popup-body'),
+        popupFooter: document.getElementById('popup-footer'),
+        
+        musicAudio: document.getElementById('music-audio'),
+        warAudio: document.getElementById('war-audio'),
+        sfxAudio: document.getElementById('sfx-audio'),
+        introVideo: document.getElementById('intro-video'),
+        videoText: document.getElementById('video-text')
+    };
+
+    const AUDIO_PATHS = {
+        'music': 'music.mp3',
+        'war': 'war.mp3',
+        'parad': 'parad.mp3',
+        'rne': 'rne.mp3',
+        'duh': 'duh.mp3',
+        'success': 'success.mp3',
+        'fail': 'fail.mp3',
+        'sila': 'sila.mp3',
+        'peregovori': 'peregovori.mp3'
+    };
+    
+    let defaultVolume = 0.5;
+
+    // --- Game State ---
+    function initializeGame() {
+        game = {
+            population: 1000000,
+            production: 500000,
+            military_power: 10000,
+            tension: 20,
+            regime: "Народная Республика",
+            current_date: new Date(2025, 0, 1),
+            event_history: [],
+            factions: {
+                "Белогорьев": 50,
+                "Данил Зуллов": 25,
+                "Григорий Печорин": 25
+            },
+            is_at_war: false,
+            decisions_cooldowns: {
+                "propaganda_belogoriev": 0, "propaganda_zull": 0, "propaganda_goshanchik": 0,
+                "strengthen_militia": 0, "humanitarian_leaflets": 0, "open_casino": 0,
+                "finance_intelligence": 0, "build_hospital": 0, "military_parade": 0,
+                "fight_corruption": 0
+            },
+            turn: 0,
+            state_religion: "Православие",
+            ruling_party: "Зов Справедливости",
+            conscription_type: "Только добровольцы",
+            focus_cooldown: 0,
+            current_focus: null,
+            focus_turns_left: 0,
+            ideology: "Центризм",
+            is_coup_happened: false,
+            morale: 50,
+            elite_loyalty: 50,
+            intelligence_unlocked: false,
+            spy_cooldown: 0,
+            rne_event_triggered: false,
+            goshanchik_event_triggered: false,
+            pending_special_event: null,
+            research_points: 0,
+            stability: 50,
+            corruption: 30,
+            international_reputation: 50,
+            nuclear_weapons: 0,
+            war_exhaustion: 0,
+            // --- ВОССТАНОВЛЕННЫЙ СПИСОК СТРАН С ДОБАВЛЕНИЕМ КАРДАЕВА ---
+            countries: {
+                "kardaev": {"name": "Кардаев (Вы)", "status": "player", "strength": 100, "relations": 100},
+                "don_cossack_host": {"name": "Казачье Войско Донское", "status": "neutral", "active": true, "strength": 80, "relations": -10, "war_progress": 0},
+                "stalingrad_commune": {"name": "Сталинградская Коммуна", "status": "neutral", "active": true, "strength": 120, "relations": 0, "war_progress": 0},
+                "novorossiya_gov": {"name": "Новороссийское Правительство", "status": "ally", "active": true, "strength": 60, "relations": 30, "war_progress": 0},
+                "crimean_khanate": {"name": "Крымское Ханство", "status": "neutral", "active": true, "strength": 40, "relations": -5, "war_progress": 0},
+                "kuban_republic": {"name": "Кубанская Республика", "status": "neutral", "active": true, "strength": 70, "relations": 15, "war_progress": 0}
+            },
+            enemy_target: null,
+            peace_cooldown: 0,
+            war_cooldowns: {
+                "shelling": 0, "river_crossing": 0, "artillery_barrage": 0, "infantry_assault": 0,
+                "major_operation": 0, "special_forces": 0, "siege_warfare": 0,
+                "fortify_position": 0, "counter_recon": 0
+            },
+            technologies: JSON.parse(JSON.stringify(technologies)),
+            current_research: null,
+            achievements: JSON.parse(JSON.stringify(achievements))
+        };
+    }
+
+    function updateStats(stats) {
+        game.population = Math.max(0, game.population + (stats.population || 0));
+        game.production = Math.max(0, game.production + (stats.production || 0));
+        game.military_power = Math.max(0, game.military_power + (stats.military_power || 0));
+        game.tension = Math.max(0, Math.min(100, game.tension + (stats.tension || 0)));
+        game.morale = Math.max(0, Math.min(100, game.morale + (stats.morale || 0)));
+        game.elite_loyalty = Math.max(0, Math.min(100, game.elite_loyalty + (stats.elite_loyalty || 0)));
+        game.research_points = Math.max(0, game.research_points + (stats.research_points || 0));
+        game.stability = Math.max(0, Math.min(100, game.stability + (stats.stability || 0)));
+        game.corruption = Math.max(0, Math.min(100, game.corruption + (stats.corruption || 0)));
+        game.international_reputation = Math.max(0, Math.min(100, game.international_reputation + (stats.reputation || 0)));
+        game.nuclear_weapons = Math.max(0, game.nuclear_weapons + (stats.nuclear_weapons || 0));
+    }
+    
+    function updateFactions(factions) {
+        game.factions["Белогорьев"] += factions.belogoriev || 0;
+        game.factions["Данил Зуллов"] += factions.zull || 0;
+        game.factions["Григорий Печорин"] += factions.goshanchik || 0;
+        let total = game.factions["Белогорьев"] + game.factions["Данил Зуллов"] + game.factions["Григорий Печорин"];
+        if (total === 0) total = 1;
+        for (let key in game.factions) {
+            game.factions[key] = Math.max(0, Math.min(100, game.factions[key] * 100 / total));
+        }
+    }
+    
+    function updateGameLoop() {
+        game.turn++;
+        game.current_date.setDate(game.current_date.getDate() + 20);
+
+        game.production += Math.floor(game.production * (game.morale - 50) / 1000);
+        game.production -= Math.floor(game.production * game.corruption / 500);
+        game.corruption = Math.min(100, game.corruption + 1);
+
+        if (game.is_at_war) {
+            game.war_exhaustion = Math.min(100, game.war_exhaustion + 2);
+            game.morale = Math.max(0, game.morale - 1);
+            if (game.war_exhaustion > 80) {
+                game.tension = Math.min(100, game.tension + 5);
+            }
+        } else {
+            game.war_exhaustion = Math.max(0, game.war_exhaustion - 3);
+            game.corruption = Math.max(0, game.corruption - 1);
+        }
+
+        for (let key in game.decisions_cooldowns) {
+            if (game.decisions_cooldowns[key] > 0) game.decisions_cooldowns[key]--;
+        }
+        
+        if (game.focus_cooldown > 0) game.focus_cooldown--;
+        if (game.spy_cooldown > 0) game.spy_cooldown--;
+        if (game.peace_cooldown > 0) game.peace_cooldown--;
+
+        for (let key in game.war_cooldowns) {
+            if (game.war_cooldowns[key] > 0) game.war_cooldowns[key]--;
+        }
+        
+        if (game.current_focus && game.focus_turns_left > 0) {
+            game.focus_turns_left--;
+            if (game.focus_turns_left === 0) applyFocusEffects();
+        }
+
+        if (game.current_research) {
+            game.technologies[game.current_research].turns_left--;
+            if (game.technologies[game.current_research].turns_left <= 0) researchComplete();
+        }
+
+        checkGameOver();
+        checkCoup();
+        checkFactionEvents();
+        checkAchievements();
+        updateRulingParty();
+        updateIdeology();
+        updateStatsDisplay();
+
+        if (game.pending_special_event) {
+            let event = special_events[game.pending_special_event];
+            game.pending_special_event = null;
+            showEvent(event);
+        } else if (game.is_at_war) {
+            const warEventKeys = Object.keys(war_events).filter(key => !["war_start", "war_win", "war_lose", "negotiate_peace"].includes(key));
+            const eventKey = warEventKeys[Math.floor(Math.random() * warEventKeys.length)];
+            const event = war_events[eventKey];
+            
+            if (game.enemy_target) {
+                if (eventKey === "war_event1") {
+                    game.countries[game.enemy_target].war_progress = Math.max(0, game.countries[game.enemy_target].war_progress - 10);
+                } else if (eventKey === "war_event2") {
+                    game.countries[game.enemy_target].war_progress = Math.min(100, game.countries[game.enemy_target].war_progress + 10);
+                }
+            }
+            showEvent(event);
+        } else if (game.tension >= 80) {
+            const event = war_events["war_start"];
+            game.enemy_target = "don_cossack_host";
+            game.is_at_war = true;
+            game.countries[game.enemy_target]['status'] = "ВОЙНА";
+            game.countries[game.enemy_target]['war_progress'] = 0;
+            playMusic('war');
+            showEvent(event);
+        } else {
+            const eventKey = Object.keys(events)[Math.floor(Math.random() * Object.keys(events).length)];
+            showEvent(events[eventKey]);
+        }
+    }
+    
+    function updateStatsDisplay() {
+        gameElements.populationStat.innerText = game.population.toLocaleString();
+        gameElements.productionStat.innerText = game.production.toLocaleString();
+        gameElements.militaryStat.innerText = game.military_power.toLocaleString();
+
+        const tensionColor = game.tension >= 70 ? 'var(--accent-danger)' : (game.tension >= 40 ? 'var(--accent-warning)' : 'var(--accent-success)');
+        gameElements.tensionStat.style.color = tensionColor;
+        gameElements.tensionStat.innerText = `${game.tension}%`;
+        
+        const moraleColor = game.morale >= 70 ? 'var(--accent-success)' : (game.morale >= 40 ? 'var(--accent-warning)' : 'var(--accent-danger)');
+        gameElements.moraleStat.style.color = moraleColor;
+        gameElements.moraleStat.innerText = `${game.morale}%`;
+
+        const eliteColor = game.elite_loyalty >= 70 ? 'var(--accent-success)' : (game.elite_loyalty >= 40 ? 'var(--accent-warning)' : 'var(--accent-danger)');
+        gameElements.eliteStat.style.color = eliteColor;
+        gameElements.eliteStat.innerText = `${game.elite_loyalty}%`;
+
+        const day = game.current_date.getDate();
+        const month = RUSSIAN_MONTHS[game.current_date.getMonth()];
+        const year = game.current_date.getFullYear();
+        gameElements.dateInfo.innerText = `Дата: ${day} ${month} ${year}`;
+
+        gameElements.regimeInfo.innerText = `Режим: ${game.regime}`;
+        gameElements.ideologyInfo.innerText = `Идеология: ${game.ideology}`;
+        
+        const corruptionColor = game.corruption >= 70 ? 'var(--accent-danger)' : (game.corruption >= 40 ? 'var(--accent-warning)' : 'var(--accent-success)');
+        gameElements.corruptionInfo.style.color = corruptionColor;
+        gameElements.corruptionInfo.innerText = `Коррупция: ${game.corruption}%`;
+        
+        let researchText = "Нет";
+        if (game.current_research) {
+            const tech = game.technologies[game.current_research];
+            researchText = `${tech.title} (${tech.turns_left})`;
+        }
+        gameElements.researchInfo.innerText = `Исследования: ${researchText}`;
+
+        updateFactionsDisplay();
+        updateFlag();
+    }
+
+    function updateFactionsDisplay() {
+        gameElements.factionBelogoriev.innerText = `${game.factions["Белогорьев"].toFixed(1)}%`;
+        gameElements.factionZull.innerText = `${game.factions["Данил Зуллов"].toFixed(1)}%`;
+        gameElements.factionGoshanchik.innerText = `${game.factions["Григорий Печорин"].toFixed(1)}%`;
+    }
+    
+    function updateFlag() {
+        let flagSource = 'zs.png';
+        if (game.ruling_party === "Орден Данила Зуллова") {
+            flagSource = 'rnu.png';
+        } else if (game.ruling_party === "Фракция Григория Печорина") {
+            flagSource = 'rusduh.png';
+        }
+        gameElements.flagImage.src = flagSource;
+    }
+
+    function checkCoup() {
+        if (!game.is_coup_happened) {
+            if (game.factions["Данил Зуллов"] >= 70) {
+                game.regime = "Военная хунта";
+                game.ruling_party = "Орден Данила Зуллов";
+                game.is_coup_happened = true;
+                game.factions = {"Белогорьев": 0, "Данил Зуллов": 100, "Григорий Печорин": 0};
+                showPopup("Государственный переворот!", "Военный переворот! Данил Зуллов захватил власть. Теперь вы - лидер военной хунты под его контролем.");
+                // Removed clearInterval
+            } else if (game.factions["Григорий Печорин"] >= 70) {
+                game.regime = "Демократическое государство";
+                game.ruling_party = "Фракция Григория Печорина";
+                game.is_coup_happened = true;
+                game.factions = {"Белогорьев": 0, "Григорий Печорин": 100, "Данил Зуллов": 0};
+                showPopup("Революция!", "Демократическая революция! Григорий Печорин захватил власть. Вы стали лидером марионеточного демократического правительства.");
+                // Removed clearInterval
+            }
+        }
+        if (game.elite_loyalty < 20 && game.tension > 60) {
+            showPopup("Государственный переворот!", "Элиты больше не доверяют вам. Произошёл переворот, и вы были свергнуты.");
+            // Removed clearInterval
+        }
+    }
+    
+    function checkGameOver() {
+        if (game.population <= 100000 && game.current_date.getFullYear() > 2030) {
+            showPopup("Поражение", "Население резко сократилось. Кардаев больше не может существовать.");
+            // Removed clearInterval
+        }
+    }
+    
+    function checkFactionEvents() {
+        if (!game.rne_event_triggered && game.factions["Данил Зуллов"] < 10) {
+            game.rne_event_triggered = true;
+            game.pending_special_event = "rne_rally";
+        }
+        if (!game.goshanchik_event_triggered && game.factions["Григорий Печорин"] < 10) {
+            game.goshanchik_event_triggered = true;
+            game.pending_special_event = "goshanchik_rebellion";
+        }
+        if (game.factions["Данил Зуллов"] >= 80 && Math.random() < 0.2) {
+            game.pending_special_event = "zull_triumph";
+        }
+        if (game.factions["Григорий Печорин"] >= 80 && Math.random() < 0.2) {
+            game.pending_special_event = "goshanchik_peace";
+        }
+    }
+    
+    function checkAchievements() {
+        if (!game.achievements["economic_miracle"].achieved && game.production >= 1000000) {
+            game.achievements["economic_miracle"].achieved = true;
+            showPopup("Достижение!", game.achievements["economic_miracle"].description);
+        }
+        if (!game.achievements["loyal_elite"].achieved && game.elite_loyalty >= 100) {
+            game.achievements["loyal_elite"].achieved = true;
+            showPopup("Достижение!", game.achievements["loyal_elite"].description);
+        }
+    }
+
+    function updateRulingParty() {
+        if (!game.is_coup_happened) {
+            if (game.factions["Данил Зуллов"] >= 70) {
+                game.regime = "Военная хунта";
+                game.ruling_party = "Орден Данила Зуллова";
+                game.is_coup_happened = true;
+                game.factions = {"Белогорьев": 0, "Данил Зуллов": 100, "Григорий Печорин": 0};
+                showPopup("Государственный переворот!", "Военный переворот! Данил Зуллов захватил власть. Теперь вы - лидер военной хунты под его контролем.");
+                clearInterval(turnInterval);
+            } else if (game.factions["Григорий Печорин"] >= 70) {
+                game.regime = "Демократическое государство";
+                game.ruling_party = "Фракция Григория Печорина";
+                game.is_coup_happened = true;
+                game.factions = {"Белогорьев": 0, "Григорий Печорин": 100, "Данил Зуллов": 0};
+                showPopup("Революция!", "Демократическая революция! Григорий Печорин захватил власть. Вы стали лидером марионеточного демократического правительства.");
+                clearInterval(turnInterval);
+            }
+        }
+        if (game.elite_loyalty < 20 && game.tension > 60) {
+            showPopup("Государственный переворот!", "Элиты больше не доверяют вам. Произошёл переворот, и вы были свергнуты.");
+            clearInterval(turnInterval);
+        }
+    }
+
+    function updateIdeology() {
+        const zullInfluence = game.factions["Данил Зуллов"];
+        const goshanchikInfluence = game.factions["Григорий Печорин"];
+        if (zullInfluence > goshanchikInfluence + 10) {
+            game.ideology = "Авторитаризм";
+        } else if (goshanchikInfluence > zullInfluence + 10) {
+            game.ideology = "Либерализм";
+        } else {
+            game.ideology = "Центризм";
+        }
+    }
+    
+    function showEvent(eventData) {
+        gameElements.eventTitle.innerText = eventData.title;
+        gameElements.eventDescription.innerText = eventData.description;
+        gameElements.eventOptions.innerHTML = '';
+        gameElements.eventImage.style.display = 'none';
+
+        if (eventData.image_path) {
+            gameElements.eventImage.src = eventData.image_path;
+            gameElements.eventImage.style.display = 'block';
+        }
+        
+        if (eventData.sound_key) {
+            pauseMusic();
+            playSoundEffect(eventData.sound_key);
+        }
+
+        eventData.options.forEach((option, index) => {
+            const btn = document.createElement('button');
+            btn.className = 'btn';
+            btn.innerText = option.text;
+            btn.onclick = () => handleDecision(eventData.title, option);
+            gameElements.eventOptions.appendChild(btn);
+        });
+    }
+
+    function handleDecision(eventTitle, option) {
+        stopSoundEffect();
+        resumeMusic();
+
+        const consequences = option.consequences;
+
+        if (consequences.sound_key) {
+            playSoundEffect(consequences.sound_key);
+        }
+
+        updateStats(consequences);
+        updateFactions({
+            belogoriev: consequences.faction_belogoriev || 0,
+            zull: consequences.faction_zull || 0,
+            goshanchik: consequences.faction_goshanchik || 0
+        });
+        
+        game.regime = consequences.new_regime || game.regime;
+        game.event_history.push([eventTitle, option.text]);
+        updateStatsDisplay();
+        
+        if (eventTitle === "Начало войны") {
+            game.is_at_war = true;
+            game.countries[game.enemy_target].status = "ВОЙНА";
+            playMusic('war');
+        }
+
+        showPopup("Последствия", consequences.message || "Решение принято.", () => showNextEvent());
+    }
+
+    function showNextEvent() {
+        updateGameLoop();
+    }
+    
+    function showActions(type) {
+        let data = {};
+        let title = "";
+        let actionCommand = null;
+
+        if (type === "decisions") {
+            data = decisions;
+            title = "Политический курс";
+            actionCommand = (key) => handleDecisionClick(key);
+        } else if (type === "focuses") {
+            data = national_focuses;
+            title = "Национальные фокусы";
+            actionCommand = (key) => startFocus(key);
+        } else if (type === "spies") {
+            data = spy_missions;
+            title = "Шпионаж";
+            actionCommand = (key) => startSpyMission(key);
+        }
+        
+        let contentHtml = `
+            <div style="display: flex; flex-direction: column; gap: 10px;">
+        `;
+        
+        for (const key in data) {
+            const item = data[key];
+            let btnText = item.title;
+            let isDisabled = false;
+
+            if (type === "decisions") {
+                if (game.decisions_cooldowns[key] > 0) {
+                    btnText += ` (КД: ${game.decisions_cooldowns[key]})`;
+                }
+                btnText += `\nЦена: ${item.cost} пр.`;
+                if (game.production < item.cost || game.decisions_cooldowns[key] > 0) {
+                    isDisabled = true;
+                }
+            } else if (type === "focuses") {
+                if (game.current_focus || game.focus_cooldown > 0) {
+                    btnText += ` (КД: ${game.focus_cooldown})`;
+                }
+                if (game.current_focus || game.focus_cooldown > 0) {
+                    isDisabled = true;
+                }
+            } else if (type === "spies") {
+                if (game.spy_cooldown > 0) {
+                    btnText += ` (КД: ${game.spy_cooldown})`;
+                }
+                if (game.spy_cooldown > 0 || !game.intelligence_unlocked || (key === "assassinate_leader" && !game.is_at_war)) {
+                    isDisabled = true;
+                }
+                btnText += `\nЦена: ${item.cost} пр.`;
+            }
+
+            contentHtml += `
+                <button class="btn" onclick="(${actionCommand.toString()})('${key}');" ${isDisabled ? 'disabled' : ''}>
+                    ${btnText.replace(/\n/g, '<br>')}
+                </button>
+            `;
+        }
+
+        contentHtml += `</div>`;
+        showPopup(title, contentHtml, () => {}, true);
+    }
+    
+    function handleDecisionClick(key) {
+        const decision = decisions[key];
+        if (game.production < decision.cost) {
+            showPopup("Недостаточно ресурсов", "У вас недостаточно производства для этого решения.");
+            return;
+        }
+
+        game.production -= decision.cost;
+        game.decisions_cooldowns[key] = decision.cooldown;
+        
+        if (decision.event_key) {
+            const eventData = special_events[decision.event_key];
+            showEvent(eventData);
+        } else {
+            const consequences = decision.consequences;
+            updateStats(consequences);
+            updateFactions({
+                belogoriev: consequences.faction_belogoriev || 0,
+                zull: consequences.faction_zull || 0,
+                goshanchik: consequences.faction_goshanchik || 0
+            });
+            updateStatsDisplay();
+            showPopup("Последствия", decision.message || "Решение принято.", () => showNextEvent());
+            game.event_history.push(["Политическое решение", decision.title]);
+        }
+        closePopup();
+    }
+    
+    function startFocus(focus_key) {
+        if (game.focus_cooldown > 0) {
+            showPopup("Нельзя!", `Вы уже выбрали фокус. Дождитесь завершения или окончания перезарядки (${game.focus_cooldown} ходов).`);
+            return;
+        }
+        
+        const focus = national_focuses[focus_key];
+        game.current_focus = focus_key;
+        game.focus_turns_left = focus.duration;
+        game.focus_cooldown = focus.cooldown;
+        showPopup("Национальный фокус", `Вы начали фокус: ${focus.title}. Он займёт ${focus.duration} ходов.`, () => showNextEvent());
+        game.event_history.push(["Национальный фокус", focus.title]);
+    }
+
+    function applyFocusEffects() {
+        const focus = national_focuses[game.current_focus];
+        const consequences = focus.consequences;
+        updateStats(consequences);
+        updateFactions({
+            belogoriev: consequences.faction_belogoriev || 0,
+            zull: consequences.faction_zull || 0,
+            goshanchik: consequences.faction_goshanchik || 0
+        });
+        
+        if (game.current_focus === "create_intelligence") {
+            game.intelligence_unlocked = true;
+        }
+
+        showPopup("Отчёт о фокусе", `Фокус '${focus.title}' завершён. Последствия применены. \n\n${consequences.message || ''}`, () => showNextEvent());
+        game.current_focus = null;
+        updateStatsDisplay();
+    }
+    
+    function startSpyMission(mission_key) {
+        if (!game.intelligence_unlocked) {
+            showPopup("Операция невозможна", "Вы ещё не создали внешнюю разведку.");
+            return;
+        }
+        if (game.spy_cooldown > 0) {
+            showPopup("Операция невозможна", `Шпионы ещё не вернулись. Дождитесь окончания перезарядки (${game.spy_cooldown} ходов).`);
+            return;
+        }
+        
+        const mission = spy_missions[mission_key];
+        if (game.production < mission.cost) {
+            showPopup("Недостаточно ресурсов", "У вас недостаточно производства для этой миссии.");
+            return;
+        }
+
+        game.production -= mission.cost;
+        game.spy_cooldown = 5;
+        
+        const successChance = Math.random() * 100 + game.elite_loyalty / 2;
+        
+        let message, consequences;
+        
+        if (mission_key === "assassinate_leader") {
+            if (successChance > 85) {
+                message = "Успех! Ваш шпион успешно ликвидировал вражеского лидера. Война окончена!";
+                game.is_at_war = false;
+                game.tension = 59;
+                updateStats({military_power: 10000, production: 20000, morale: 10, elite_loyalty: 10});
+                game.enemy_target = null;
+                playMusic('music');
+            } else if (successChance > 40) {
+                message = "Провал! Ваш шпион был пойман, но смог сбежать.";
+                updateStats({tension: 15, morale: -10, elite_loyalty: -5});
+            } else {
+                message = "Катастрофа! Ваш шпион был пойман и казнён. Это вызвало дипломатический скандал и сильное напряжение.";
+                updateStats({tension: 20, morale: -20, elite_loyalty: -10});
+            }
+        } else {
+            if (successChance > 50) {
+                consequences = mission.consequences_success;
+                message = mission.message_success;
+                updateStats(consequences);
+            } else {
+                consequences = mission.consequences_fail;
+                message = mission.message_fail;
+                updateStats(consequences);
+            }
+        }
+        
+        showPopup("Секретное донесение", message, () => showNextEvent());
+        updateStatsDisplay();
+    }
+
+    // --- Popups ---
+    let lastPopupContent = null;
+    function showPopup(title, body, okCallback = null, isHtml = false) {
+        gameElements.popupTitle.innerText = title;
+        if (isHtml) {
+            gameElements.popupBody.innerHTML = body;
+        } else {
+            gameElements.popupBody.innerText = body;
+        }
+        lastPopupContent = {title: title, body: body, isHtml: isHtml};
+        gameElements.popupOverlay.style.display = 'flex';
+        
+        const okButton = document.createElement('button');
+        okButton.className = 'btn';
+        okButton.innerText = 'OK';
+        okButton.onclick = () => { closePopup(); if(okCallback) okCallback(); };
+        gameElements.popupFooter.innerHTML = '';
+        gameElements.popupFooter.appendChild(okButton);
+    }
+
+    function closePopup() {
+        gameElements.popupOverlay.style.display = 'none';
+    }
+    
+    function showLorePopup() {
+        showPopup("О лоре и персонажах", LORE_TEXT, null, true);
+    }
+    
+    function showHistoryPopup() {
+        let historyText = "История принятых вами решений:\n\n";
+        if (game.event_history.length === 0) {
+            historyText += "История ещё не началась...";
+        } else {
+            game.event_history.forEach(([title, decision]) => {
+                historyText += `- **${title}**: Вы выбрали '${decision}'\n`;
+            });
+        }
+        showPopup("История событий", historyText, null, true);
+    }
+    
+    function showDiplomacyPopup() {
+        let html = `
+            <h4 style="text-align: center;">Список стран (соседи):</h4>
+            <div style="display: flex; flex-direction: column; gap: 8px;">
+        `;
+        const statusMap = {
+            "neutral": "НЕЙТРАЛЬНАЯ", "ally": "СОЮЗНИК", "ВОЙНА": "ВОЙНА", "АННЕКСИРОВАНА": "АННЕКСИРОВАНА", "lost": "ПОТЕРЯНА"
+        };
+        for (const key in game.countries) {
+            if (game.countries[key].status === 'player') continue; // Не показываем игрока в списке
+            const c = game.countries[key];
+            const statusText = statusMap[c.status] || c.status;
+            html += `
+                <div style="background-color: #333; padding: 10px; border-radius: 8px;">
+                    <p style="margin: 0;"><b>${c.name}</b> — ${statusText}</p>
+                    <div style="margin-top: 10px; display: flex; gap: 8px;">
+                        ${c.status === "ВОЙНА" ? `<button class="btn" onclick="showWarOperationsPopup('${key}')">Операции</button>` :
+                        c.status === "АННЕКСИРОВАНА" ? `<button class="btn" disabled>Аннексирована</button>` :
+                        `<button class="btn" onclick="declareWar('${key}'); closePopup();">Объявить войну</button>`}
+                    </div>
+                </div>
+            `;
+        }
+        html += `</div>`;
+        showPopup("Дипломатия и страны", html, null, true);
+    }
+    
+    function showWarOperationsPopup(countryKey) {
+        const country = game.countries[countryKey];
+        if (!country || country.status !== "ВОЙНА") {
+            showPopup("Ошибка", "Неверная цель.");
+            return;
+        }
+
+        let html = `
+            <div style="text-align: center;">
+                <h4>Военные операции против ${country.name}</h4>
+                <p class="progress-label">Прогресс захвата: ${country.war_progress.toFixed(0)}%</p>
+                <div class="progress-bar-container">
+                    <div class="progress-bar" style="width: ${country.war_progress}%;"></div>
+                </div>
+            </div>
+            <div style="display: flex; flex-direction: column; gap: 10px; margin-top: 20px;">
+                <h4 style="text-align: center;">Наступательные операции</h4>
+        `;
+        
+        for (const key in war_actions) {
+            const action = war_actions[key];
+            const cooldown = game.war_cooldowns[key] || 0;
+            const isDisabled = game.production < action.cost || cooldown > 0;
+            html += `
+                <button class="btn" onclick="conductOffensive('${countryKey}', '${key}'); closePopup();" ${isDisabled ? 'disabled' : ''}>
+                    ${action.title} — Цена: ${action.cost} пр. (КД: ${cooldown})
+                </button>
+            `;
+        }
+
+        html += `<h4 style="text-align: center; margin-top: 20px;">Оборонительные операции</h4>`;
+        
+        for (const key in war_defensive_actions) {
+            const action = war_defensive_actions[key];
+            const cooldown = game.war_cooldowns[key] || 0;
+            const isDisabled = game.production < action.cost || cooldown > 0;
+            html += `
+                <button class="btn" onclick="conductDefensive('${countryKey}', '${key}'); closePopup();" ${isDisabled ? 'disabled' : ''}>
+                    ${action.title} — Цена: ${action.cost} пр. (КД: ${cooldown})
+                </button>
+            `;
+        }
+
+        html += `
+            <button class="btn" style="background-color: var(--accent-color); margin-top: 20px;" onclick="negotiatePeace('${countryKey}'); closePopup();">
+                Начать мирные переговоры
+            </button>
+            </div>
+        `;
+        showPopup("Военные операции", html, null, true);
+    }
+    
+    function declareWar(countryKey) {
+        const country = game.countries[countryKey];
+        if (country.status === "ally") {
+            showPopup("Ошибка", `${country.name} — союзник. Объявлять войну нельзя.`);
+            return;
+        }
+        if (game.production < 10000) {
+            showPopup("Недостаточно ресурсов", "Недостаточно производства для объявления войны.");
+            return;
+        }
+
+        game.production -= 10000;
+        country.status = "ВОЙНА";
+        game.is_at_war = true;
+        game.enemy_target = countryKey;
+        game.tension = Math.min(100, game.tension + 20);
+        game.morale = Math.max(0, game.morale - 5);
+        country.war_progress = 0;
+        game.event_history.push(["Объявление войны", `Объявлена война ${country.name}`]);
+        showPopup("Успех", `Вы объявили войну ${country.name}`, () => showWarOperationsPopup(countryKey));
+        playMusic('war');
+        updateStatsDisplay();
+    }
+    
+    function conductOffensive(countryKey, actionKey) {
+        const country = game.countries[countryKey];
+        const action = war_actions[actionKey];
+
+        if (game.war_cooldowns.major_operation > 0) {
+            showPopup("Перезарядка", `Глобальная перезарядка операций: ${game.war_cooldowns.major_operation} ходов.`);
+            return;
+        }
+        if (game.war_cooldowns[actionKey] > 0) {
+            showPopup("Перезарядка", `Действие '${action.title}' на перезарядке: ${game.war_cooldowns[actionKey]} ходов.`);
+            return;
+        }
+        if (game.production < action.cost) {
+            showPopup("Недостаточно ресурсов", "Недостаточно производства для операции.");
+            return;
+        }
+        
+        game.production -= action.cost;
+        game.war_cooldowns[actionKey] = action.cooldown;
+        game.war_cooldowns.major_operation = Math.max(game.war_cooldowns.major_operation, 1);
+        
+        const roll = Math.random() * 100;
+        const successThreshold = 50 + (action.success_mod || 0) - (game.military_power / 1000) - (game.morale / 10) + (country.strength / 10);
+        const success = roll >= successThreshold;
+        
+        let msg;
+        if (success) {
+            const eff = action.effects_success;
+            updateStats(eff);
+            country.war_progress = Math.min(100, country.war_progress + (action.progress_mod_success || 0));
+            msg = `${action.title} против ${country.name} — Успех!`;
+            playSoundEffect('success');
+            
+            if (country.war_progress >= 100) {
+                country.status = "АННЕКСИРОВАНА";
+                game.is_at_war = false;
+                game.enemy_target = null;
+                playMusic('music');
+                const winEvent = war_events["war_win"];
+                showEvent(winEvent);
+                if (!game.achievements["first_victory"].achieved) {
+                    game.achievements["first_victory"].achieved = true;
+                    showPopup("Достижение!", game.achievements["first_victory"].description);
+                }
+                return;
+            }
+        } else {
+            const eff = action.effects_fail;
+            updateStats(eff);
+            country.war_progress = Math.max(0, country.war_progress + (action.progress_mod_fail || 0));
+            msg = `${action.title} против ${country.name} — Провал. Потери и рост напряжённости.`;
+            playSoundEffect('fail');
+
+            if (country.war_progress <= 0) {
+                country.status = "lost";
+                game.is_at_war = false;
+                game.enemy_target = null;
+                playMusic('music');
+                const loseEvent = war_events["war_lose"];
+                showEvent(loseEvent);
+                return;
+            }
+        }
+        
+        showPopup(success ? "Успех!" : "Провал!", msg, () => showNextEvent());
+        game.event_history.push(["Операция", `${action.title} против ${country.name}: ${success ? "УСПЕХ" : "ПРОВАЛ"}`]);
+        updateStatsDisplay();
+    }
+    
+    function conductDefensive(countryKey, actionKey) {
+        const country = game.countries[countryKey];
+        const action = war_defensive_actions[actionKey];
+
+        if (game.production < action.cost) {
+            showPopup("Недостаточно ресурсов", "Недостаточно производства для операции.");
+            return;
+        }
+        
+        game.production -= action.cost;
+        const success = Math.random() * 100 >= (50 + (game.military_power / 1000));
+        
+        let msg;
+        if (success) {
+            const eff = action.effects_success;
+            updateStats(eff);
+            msg = `Операция '${action.title}' успешно проведена. Ваши позиции укреплены.`;
+            playSoundEffect('success');
+        } else {
+            const eff = action.effects_fail;
+            updateStats(eff);
+            msg = `Операция '${action.title}' провалена. Потери.`;
+            playSoundEffect('fail');
+        }
+        
+        game.war_cooldowns[actionKey] = action.cooldown;
+        showPopup(success ? "Успех" : "Провал", msg, () => showNextEvent());
+        updateStatsDisplay();
+    }
+    
+    function negotiatePeace(countryKey) {
+        if (game.peace_cooldown > 0) {
+            showPopup("Переговоры невозможны", `Переговоры на перезарядке (${game.peace_cooldown} ходов).`);
+            return;
+        }
+        
+        game.peace_cooldown = 5;
+        const country = game.countries[countryKey];
+        const negotiationChance = country.war_progress + game.elite_loyalty / 2 - game.war_exhaustion / 2;
+        
+        if (negotiationChance > 50) {
+            game.is_at_war = false;
+            game.enemy_target = null;
+            country.status = "neutral";
+            playMusic('music');
+            showEvent(war_events["war_win"]);
+        } else {
+            game.is_at_war = false;
+            game.enemy_target = null;
+            country.status = "neutral";
+            playMusic('music');
+            showEvent(war_events["war_lose"]);
+        }
+    }
+    
+    function showResearchPopup() {
+        let html = `
+            <p>Текущие исследования: ${game.current_research ? game.technologies[game.current_research].title : 'Нет'}</p>
+            <div style="display: flex; flex-direction: column; gap: 10px;">
+        `;
+        for (const key in game.technologies) {
+            const tech = game.technologies[key];
+            let btnText = `${tech.title}\nСтоимость: ${tech.cost} ходов`;
+            if (tech.researched) {
+                btnText += " (Изучено)";
+            } else if (tech.in_progress) {
+                btnText += ` (Осталось: ${tech.turns_left} ходов)`;
+            }
+            const isDisabled = tech.researched || tech.in_progress || game.current_research !== null;
+            html += `
+                <button class="btn" onclick="startResearch('${key}');" ${isDisabled ? 'disabled' : ''}>
+                    ${btnText.replace(/\n/g, '<br>')}
+                </button>
+            `;
+        }
+        html += `</div>`;
+        showPopup("Исследования", html, null, true);
+    }
+    
+    function startResearch(techKey) {
+        const tech = game.technologies[techKey];
+        game.current_research = techKey;
+        tech.in_progress = true;
+        tech.turns_left = tech.cost;
+        showPopup("Исследования начаты", `Вы начали изучать '${tech.title}'.`, () => showNextEvent());
+    }
+
+    function researchComplete() {
+        const tech = game.technologies[game.current_research];
+        tech.in_progress = false;
+        tech.researched = true;
+        
+        let message = `Технология '${tech.title}' изучена.`;
+        if (game.current_research === "advanced_logistics") {
+            updateStats({military_power: 5000, production: -20000, morale: 5});
+            message += " Военная мощь возросла.";
+        } else if (game.current_research === "military_industrial_complex") {
+            updateStats({production: 100000, military_power: 15000, tension: 10});
+            message += " Производство и армия выросли.";
+        } else if (game.current_research === "modern_farming") {
+            updateStats({population: 50000, production: 50000, morale: 10});
+            message += " Население и производство выросли.";
+        }
+        
+        game.current_research = null;
+        updateStatsDisplay();
+        showPopup("Исследование завершено!", message, () => showNextEvent());
+    }
+
+    function showAchievementsPopup() {
+        let html = `<div style="display: flex; flex-direction: column; gap: 10px;">`;
+        for (const key in achievements) {
+            const ach = achievements[key];
+            const statusText = ach.achieved ? "Получено" : "Не получено";
+            const color = ach.achieved ? 'var(--accent-success)' : 'var(--accent-danger)';
+            html += `
+                <div style="background-color: #333; padding: 15px; border-radius: 8px;">
+                    <p style="font-weight: bold; font-size: 1.2rem; margin: 0;">${ach.title}</p>
+                    <p style="color: ${color}; margin: 5px 0;">(${statusText})</p>
+                    <p style="margin: 0;">${ach.description}</p>
+                </div>
+            `;
+        }
+        html += `</div>`;
+        showPopup("Достижения", html, null, true);
+    }
+
+    // --- Media and Screen Management ---
+    function playMusic(track) {
+        if (currentMusic && !currentMusic.paused) {
+            return;
+        }
+
+        if (currentMusic) {
+            currentMusic.pause();
+        }
+        if (track === 'music') {
+            currentMusic = gameElements.musicAudio;
+            currentMusic.src = AUDIO_PATHS.music;
+        } else if (track === 'war') {
+            currentMusic = gameElements.warAudio;
+            currentMusic.src = AUDIO_PATHS.war;
+        }
+
+        if (currentMusic) {
+            currentMusic.volume = defaultVolume;
+            
+            const playPromise = currentMusic.play();
+
+            if (playPromise !== undefined) {
+                playPromise.catch(error => {
+                    console.log("Музыка заблокирована браузером. Ожидание первого клика...");
+                    
+                    const startMusicOnClick = () => {
+                        currentMusic.play();
+                        document.body.removeEventListener('click', startMusicOnClick);
+                    };
+                    
+                    document.body.addEventListener('click', startMusicOnClick, { once: true });
+                });
+            }
+        }
+    }
+    
+    function pauseMusic() {
+        if (currentMusic) {
+            currentMusic.volume = 0.1;
+        }
+    }
+
+    function resumeMusic() {
+        if (currentMusic) {
+            currentMusic.volume = defaultVolume;
+        }
+    }
+
+    function playSoundEffect(soundKey) {
+        if (currentSoundEffect) {
+            currentSoundEffect.pause();
+        }
+        gameElements.sfxAudio.src = AUDIO_PATHS[soundKey];
+        gameElements.sfxAudio.play().catch(e => console.error("SFX playback failed:", e));
+        currentSoundEffect = gameElements.sfxAudio;
+    }
+    
+    function stopSoundEffect() {
+        if (currentSoundEffect) {
+            currentSoundEffect.pause();
+        }
+    }
+
+    function showMenuScreen() {
+        gameElements.introVideo.pause();
+        gameElements.introVideo.currentTime = 0;
+        document.body.style.overflow = 'hidden';
+        gameElements.gameContainer.style.display = 'none';
+        gameElements.introVideoScreen.style.display = 'none';
+        gameElements.settingsScreen.style.display = 'none';
+        gameElements.menuScreen.style.display = 'flex';
+        playMusic('music');
+    }
+    
+    function showIntroVideo() {
+        gameElements.menuScreen.style.display = 'none';
+        gameElements.introVideoScreen.style.display = 'flex';
+        
+        pauseMusic();
+        gameElements.introVideo.play();
+
+        const videoTexts = [
+            { text: "Это Кардаев. Красивый и развивающийся небольшой городок на юго-западе России.", time: 0 },
+            { text: "Но на его земли пришла кровавая гражданская война...", time: 10 },
+            { text: "Останови это, если сможешь", time: 18 }
+        ];
+
+        let textIndex = 0;
+        gameElements.introVideo.ontimeupdate = () => {
+            if (textIndex < videoTexts.length && gameElements.introVideo.currentTime >= videoTexts[textIndex].time) {
+                gameElements.videoText.innerText = videoTexts[textIndex].text;
+                gameElements.videoText.style.opacity = 1;
+                textIndex++;
+            }
+        };
+        
+        gameElements.introVideo.onended = () => {
+            endVideo();
+        };
+    }
+    
+    function endVideo() {
+        gameElements.introVideo.pause();
+        gameElements.introVideo.currentTime = 0;
+        gameElements.videoText.style.opacity = 0;
+        startGame();
+        resumeMusic();
+    }
+
+    function startGame() {
+        initializeGame();
+        gameElements.menuScreen.style.display = 'none';
+        gameElements.introVideoScreen.style.display = 'none';
+        gameElements.gameContainer.style.display = 'flex';
+        document.body.style.overflow = 'auto';
+        updateStatsDisplay();
+        showNextEvent();
+    }
+
+    function showSettingsScreen() {
+        gameElements.menuScreen.style.display = 'none';
+        gameElements.settingsScreen.style.display = 'flex';
+    }
+
+    function setResolution(width, height) {
+        window.resizeTo(width, height);
+    }
+    
+    document.getElementById('fullscreen-toggle').onclick = function() {
+        if (!document.fullscreenElement) {
+            document.documentElement.requestFullscreen();
+            this.innerText = 'Выключить';
+        } else {
+            document.exitFullscreen();
+            this.innerText = 'Включить';
+        }
+    };
+
+    document.getElementById('music-volume').oninput = (e) => {
+        defaultVolume = e.target.value / 100;
+        if (currentMusic) {
+            currentMusic.volume = defaultVolume;
+        }
+    };
+    
+    // --- ИСПРАВЛЕННЫЙ ИНТЕРАКТИВНЫЙ КОД КАРТЫ ---
+
+    const mapState = {
+        zoom: 1, minZoom: 0.5, maxZoom: 5,
+        panX: 0, panY: 0,
+        isDragging: false,
+        lastMouseX: 0, lastMouseY: 0
+    };
+    let currentSvgElement = null; // Ссылка на текущий SVG элемент карты
+    const tooltip = document.getElementById('map-tooltip');
+
+    async function showMap() {
+        gameElements.gameContainer.style.display = 'none';
+        gameElements.mapScreen.style.display = 'flex';
+
+        // Загружаем SVG и вставляем его в контейнер
+        try {
+            const response = await fetch('map.svg');
+            if (!response.ok) throw new Error('Карта не найдена!');
+            const svgText = await response.text();
+            gameElements.mapContainer.innerHTML = svgText;
+            currentSvgElement = gameElements.mapContainer.querySelector('svg');
+            if (!currentSvgElement) throw new Error('Некорректный SVG файл!');
+            
+            // Сбрасываем состояние и применяем начальные стили
+            resetMapState();
+            updateMapTransform();
+            updateMapColors();
+
+            // Добавляем обработчики событий
+            addMapEventListeners();
+        } catch (error) {
+            console.error("Ошибка загрузки карты:", error);
+            gameElements.mapContainer.innerHTML = `<p style="color:red; text-align:center;">${error.message}</p>`;
+        }
+    }
+
+    function hideMap() {
+        gameElements.mapScreen.style.display = 'none';
+        gameElements.gameContainer.style.display = 'flex';
+        
+        // Удаляем обработчики и очищаем контейнер
+        removeMapEventListeners();
+        gameElements.mapContainer.innerHTML = '';
+        currentSvgElement = null;
+    }
+
+    function addMapEventListeners() {
+        const mapContainer = gameElements.mapContainer;
+        mapContainer.addEventListener('mousedown', startDrag);
+        document.addEventListener('mousemove', drag);
+        document.addEventListener('mouseup', endDrag);
+        mapContainer.addEventListener('mouseleave', endDrag);
+        mapContainer.addEventListener('wheel', zoom, { passive: false });
+        
+        // Обработчики для интерактивности вешаем прямо на SVG
+        if (currentSvgElement) {
+            currentSvgElement.addEventListener('click', handleMapClick);
+            currentSvgElement.addEventListener('mouseover', showTooltip);
+            currentSvgElement.addEventListener('mouseout', hideTooltip);
+            currentSvgElement.addEventListener('mousemove', moveTooltip);
+        }
+    }
+
+    function removeMapEventListeners() {
+        const mapContainer = gameElements.mapContainer;
+        mapContainer.removeEventListener('mousedown', startDrag);
+        document.removeEventListener('mousemove', drag);
+        document.removeEventListener('mouseup', endDrag);
+        mapContainer.removeEventListener('mouseleave', endDrag);
+        mapContainer.removeEventListener('wheel', zoom);
+
+        if (currentSvgElement) {
+            currentSvgElement.removeEventListener('click', handleMapClick);
+            currentSvgElement.removeEventListener('mouseover', showTooltip);
+            currentSvgElement.removeEventListener('mouseout', hideTooltip);
+            currentSvgElement.removeEventListener('mousemove', moveTooltip);
+        }
+    }
+
+    function handleMapClick(event) {
+        // Убеждаемся, что кликнули на path (регион)
+        if (event.target.tagName.toLowerCase() !== 'path') return;
+
+        const regionId = event.target.id;
+        const country = game.countries[regionId];
+
+        if (country && country.status !== 'player') {
+            const statusMap = { "neutral": "НЕЙТРАЛ", "ally": "СОЮЗНИК", "ВОЙНА": "ВОЙНА" };
+            const statusText = statusMap[country.status] || country.status.toUpperCase();
+            
+            let actionsHtml = '';
+            if (country.status === "ВОЙНА") {
+                actionsHtml = `<button class="btn" onclick="showWarOperationsPopup('${regionId}')">Военные операции</button>`;
+            } else if (country.status !== "ally") {
+                actionsHtml = `<button class="btn btn-red" onclick="declareWar('${regionId}'); closePopup();">Объявить войну</button>`;
+            }
+
+            const popupBody = `
+                <p><strong>Отношения:</strong> ${country.relations}</p>
+                <p><strong>Статус:</strong> ${statusText}</p>
+                <p><strong>Военная мощь (примерно):</strong> ${country.strength}</p>
+                <div style="margin-top: 20px; display: flex; justify-content: flex-end;">
+                    ${actionsHtml}
+                </div>
+            `;
+            showPopup(country.name, popupBody, null, true);
+        }
+    }
+
+    function updateMapColors() {
+        if (!currentSvgElement) return;
+        const colors = {
+            player: 'var(--accent-color)',  // синий для игрока
+            ally: 'var(--accent-success)',  // зеленый для союзников
+            neutral: '#cccccc',             // серый для нейтралов
+            ВОЙНА: 'var(--accent-danger)' // красный для врагов
+        };
+
+        for (const countryKey in game.countries) {
+            const country = game.countries[countryKey];
+            const regionElement = currentSvgElement.querySelector(`#${countryKey}`);
+            if (regionElement) {
+                regionElement.style.fill = colors[country.status] || colors.neutral;
+            }
+        }
+    }
+
+    function showTooltip(event) {
+        if (event.target.tagName.toLowerCase() !== 'path') return;
+        const regionId = event.target.id;
+        const country = game.countries[regionId];
+        if (country) {
+            tooltip.innerHTML = `<strong>${country.name}</strong>`;
+            tooltip.style.display = 'block';
+        }
+    }
+
+    function hideTooltip() {
+        tooltip.style.display = 'none';
+    }
+
+    function moveTooltip(event) {
+        if (tooltip.style.display === 'block') {
+            tooltip.style.left = (event.clientX + 15) + 'px';
+            tooltip.style.top = (event.clientY + 15) + 'px';
+        }
+    }
+
+    function resetMapState() {
+        mapState.zoom = 1;
+        mapState.panX = 0;
+        mapState.panY = 0;
+    }
+
+    function startDrag(event) {
+        event.preventDefault();
+        mapState.isDragging = true;
+        mapState.lastMouseX = event.clientX;
+        mapState.lastMouseY = event.clientY;
+    }
+
+    function drag(event) {
+        if (!mapState.isDragging) return;
+        event.preventDefault();
+        const dx = event.clientX - mapState.lastMouseX;
+        const dy = event.clientY - mapState.lastMouseY;
+        mapState.panX += dx;
+        mapState.panY += dy;
+        mapState.lastMouseX = event.clientX;
+        mapState.lastMouseY = event.clientY;
+        updateMapTransform();
+    }
+
+    function endDrag() {
+        mapState.isDragging = false;
+    }
+
+    function zoom(event) {
+        event.preventDefault();
+        const scaleFactor = event.deltaY > 0 ? 0.9 : 1.1;
+        const newZoom = Math.max(mapState.minZoom, Math.min(mapState.maxZoom, mapState.zoom * scaleFactor));
+
+        const rect = gameElements.mapContainer.getBoundingClientRect();
+        const mouseX = event.clientX - rect.left;
+        const mouseY = event.clientY - rect.top;
+
+        const pointX = (mouseX - mapState.panX) / mapState.zoom;
+        const pointY = (mouseY - mapState.panY) / mapState.zoom;
+        
+        mapState.zoom = newZoom;
+        mapState.panX = mouseX - pointX * mapState.zoom;
+        mapState.panY = mouseY - pointY * mapState.zoom;
+        
+        updateMapTransform();
+    }
+
+    function updateMapTransform() {
+        if (currentSvgElement) {
+            currentSvgElement.style.transform = `translate(${mapState.panX}px, ${mapState.panY}px) scale(${mapState.zoom})`;
+        }
+    }
+    
+    document.addEventListener('DOMContentLoaded', () => {
+        showMenuScreen();
+    });
+
+</script>
+
+</body>
+</html>
